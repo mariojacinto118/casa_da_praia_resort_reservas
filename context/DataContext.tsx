@@ -3,11 +3,20 @@ import { Room, Activity, Booking, ContactMessage } from '../types';
 import { INITIAL_ROOMS, INITIAL_ACTIVITIES } from '../constants';
 import { supabase } from '../supabase';
 
+interface ChatMessage {
+    id: number;
+    session_id: string;
+    sender: 'admin' | 'user';
+    message: string;
+    created_at: string;
+}
+
 interface DataContextType {
     rooms: Room[];
     activities: Activity[];
     bookings: Booking[];
-    contactMessages: ContactMessage[]; // Novo estado
+    contactMessages: ContactMessage[];
+    chatMessages: ChatMessage[]; // Mensagens do chat (usuário atual)
     addBooking: (booking: Omit<Booking, 'id' | 'createdAt'>) => Promise<void>;
     updateRoom: (room: Room) => void;
     updateActivity: (activity: Activity) => void;
@@ -15,7 +24,8 @@ interface DataContextType {
     error: string | null;
     updateBookingStatus: (bookingId: string, newStatus: string) => Promise<void>;
     sendMessage: (message: ContactMessage) => Promise<void>;
-    fetchMessages: () => Promise<void>; // Nova função
+    fetchMessages: () => Promise<void>;
+    sendChatMessage: (text: string, isAdmin?: boolean, targetSessionId?: string) => Promise<void>; // Atualizado
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -24,9 +34,70 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [rooms, setRooms] = useState<Room[]>(INITIAL_ROOMS);
     const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
     const [bookings, setBookings] = useState<Booking[]>([]);
-    const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]); // Estado para mensagens
+    const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
+    
+    // Chat States
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+    const [chatSessionId, setChatSessionId] = useState<string>('');
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Inicialização do Chat (Sessão e Realtime - Lado do Cliente)
+    useEffect(() => {
+        // 1. Identificar ou criar ID da sessão do usuário
+        let sid = localStorage.getItem('chat_session_id');
+        if (!sid) {
+            sid = Math.random().toString(36).substring(2) + Date.now().toString(36);
+            localStorage.setItem('chat_session_id', sid);
+        }
+        setChatSessionId(sid);
+
+        // 2. Carregar histórico inicial (apenas para este usuário)
+        const fetchHistory = async () => {
+            const { data } = await supabase
+                .from('live_chat')
+                .select('*')
+                .eq('session_id', sid)
+                .order('created_at', { ascending: true });
+            
+            if (data) {
+                // Se não houver mensagens, adicionar boas-vindas localmente
+                if (data.length === 0) {
+                    setChatMessages([{
+                        id: 0,
+                        session_id: sid!,
+                        sender: 'admin',
+                        message: 'Olá! Bem-vindo à Casa da Praia. Como podemos ajudar na sua reserva hoje?',
+                        created_at: new Date().toISOString()
+                    }]);
+                } else {
+                    setChatMessages(data);
+                }
+            }
+        };
+        fetchHistory();
+
+        // 3. Inscrever para atualizações em tempo real (Apenas mensagens desta sessão)
+        const channel = supabase
+            .channel('chat_room_user')
+            .on('postgres_changes', 
+                { event: 'INSERT', schema: 'public', table: 'live_chat', filter: `session_id=eq.${sid}` }, 
+                (payload) => {
+                    const newMsg = payload.new as ChatMessage;
+                    setChatMessages(prev => {
+                        // Evitar duplicatas
+                        if (prev.find(m => m.id === newMsg.id)) return prev;
+                        return [...prev, newMsg];
+                    });
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
 
     // Carregar reservas do Supabase ao iniciar
     useEffect(() => {
@@ -51,7 +122,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.setItem('activities', JSON.stringify(activities));
     }, [activities]);
 
-    // Buscar reservas do Supabase
     const fetchBookings = async () => {
         setLoading(true);
         setError(null);
@@ -63,7 +133,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
             if (error) throw error;
 
-            // Mapear do formato do banco para o formato da aplicação
             const mappedBookings: Booking[] = data.map(item => ({
                 id: item.id.toString(),
                 customerName: item.customer_name,
@@ -83,14 +152,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setBookings(mappedBookings);
         } catch (err) {
             console.error('Erro ao buscar reservas:', err);
-            // Não definir erro global para não bloquear a UI caso o backend não esteja configurado
-            // setError('Falha ao carregar reservas');
         } finally {
             setLoading(false);
         }
     };
 
-    // Buscar mensagens de contacto (Apenas admin consegue ler devido ao RLS)
     const fetchMessages = async () => {
         setLoading(true);
         try {
@@ -106,21 +172,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }
         } catch (err) {
             console.error('Erro ao buscar mensagens:', err);
-            // Não lançamos erro aqui para não quebrar a UI de quem não é admin
         } finally {
             setLoading(false);
         }
     };
 
-    // Adicionar nova reserva ao Supabase
     const addBooking = async (bookingData: Omit<Booking, 'id' | 'createdAt'>) => {
         setLoading(true);
         setError(null);
         try {
-            // Pegar o usuário atual (pode ser null se for convidado)
             const { data: { user } } = await supabase.auth.getUser();
             
-            // Converter para o formato do banco de dados
             const dbBooking = {
                 user_id: user?.id || null,
                 customer_name: bookingData.customerName,
@@ -199,8 +261,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         : booking
                 )
             );
-
-            console.log(`Status da reserva ${bookingId} atualizado para ${newStatus}`);
         } catch (err) {
             console.error('Erro ao atualizar status:', err);
             setError('Falha ao atualizar status da reserva');
@@ -223,9 +283,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 }]);
 
             if (error) throw error;
-            
-            console.log("Mensagem enviada com sucesso para o Supabase.");
-            
         } catch (err: any) {
             console.error('Erro ao enviar mensagem:', err);
             setError('Falha ao enviar mensagem: ' + (err.message || 'Erro desconhecido'));
@@ -235,12 +292,29 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
+    // Função atualizada para suportar envio pelo Admin
+    const sendChatMessage = async (text: string, isAdmin: boolean = false, targetSessionId?: string) => {
+        try {
+            const sessionToUse = targetSessionId || chatSessionId;
+            const senderToUse = isAdmin ? 'admin' : 'user';
+
+            await supabase.from('live_chat').insert([{
+                session_id: sessionToUse,
+                sender: senderToUse,
+                message: text
+            }]);
+        } catch (err) {
+            console.error('Erro ao enviar chat:', err);
+        }
+    };
+
     return (
         <DataContext.Provider value={{
             rooms,
             activities,
             bookings,
             contactMessages,
+            chatMessages,
             addBooking,
             updateRoom,
             updateActivity,
@@ -248,7 +322,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             error,
             updateBookingStatus,
             sendMessage,
-            fetchMessages
+            fetchMessages,
+            sendChatMessage
         }}>
             {children}
         </DataContext.Provider>

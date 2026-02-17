@@ -45,6 +45,15 @@ export interface ContactMessage {
   message: string;
   created_at?: string;
 }
+
+export interface ChatMessage {
+  id: number;
+  session_id: string;
+  sender: 'user' | 'admin';
+  message: string;
+  created_at: string;
+}
+
 export type Language = 'pt' | 'en';
 
 export interface Translation {
