@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Room, Activity, Booking, ContactMessage } from './types';
+import { Room, Activity, Booking, ContactMessage } from '../types';
 import { INITIAL_ROOMS, INITIAL_ACTIVITIES } from '../constants';
 import { supabase } from '../supabase';
 
@@ -188,45 +188,79 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     // Nova função para enviar mensagens
-    const sendMessage = async (message: ContactMessage) => {
-        setLoading(true);
-        setError(null);
-        try {
-            const { error } = await supabase
-                .from('mensagens')
-                .insert([{
-                    nome: message.name,
-                    email: message.email,
-                    mensagem: message.message
-                }]);
+    const sendMessage = async (name: string, email: string, message: string) => {
+    try {
+      console.log('Enviando mensagem:', { name, email, message });
+      
+      if (!supabase) {
+        throw new Error('Cliente Supabase não inicializado');
+      }
 
-            if (error) throw error;
-            
-        } catch (err: any) {
-            console.error('Erro ao enviar mensagem:', err);
-            setError('Falha ao enviar mensagem');
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    };
+      const { data, error } = await supabase
+        .from('mensagens')
+        .insert([
+          {
+            name,
+            email,
+            message,
+            created_at: new Date().toISOString(),
+            status: 'sent'
+          }
+        ])
+        .select();
 
-    return (
-        <DataContext.Provider value={{
-            rooms,
-            activities,
-            bookings,
-            addBooking,
-            updateRoom,
-            updateActivity,
-            loading,
-            error,
-            updateBookingStatus,
-            sendMessage
-        }}>
-            {children}
-        </DataContext.Provider>
-    );
+      if (error) {
+        console.error('Erro detalhado:', error);
+        throw error;
+      }
+
+      console.log('Mensagem salva:', data);
+
+      // Atualizar estado local com a mensagem salva
+      if (data && data[0]) {
+        setMessages(prev => [...prev, data[0]]);
+      } else {
+        // Fallback para quando não retorna dados
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          name,
+          email,
+          message,
+          created_at: new Date().toISOString(),
+          status: 'sent'
+        }]);
+      }
+      
+      return { success: true, error: null };
+      
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      };
+    }
+  };
+  
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
+
+   return (
+    <DataContext.Provider value={{ 
+        rooms, 
+        activities, 
+        bookings, 
+        messages,        // ← ADICIONE ESTA LINHA
+        addBooking, 
+        updateRoom, 
+        updateActivity, 
+        loading, 
+        error, 
+        updateBookingStatus, 
+        sendMessage      // a função sendMessage já está aqui
+    }}> 
+        {children} 
+    </DataContext.Provider>
+);
 };
 
 export const useData = () => {
