@@ -7,6 +7,7 @@ interface DataContextType {
     rooms: Room[];
     activities: Activity[];
     bookings: Booking[];
+    contactMessages: ContactMessage[]; // Novo estado
     addBooking: (booking: Omit<Booking, 'id' | 'createdAt'>) => Promise<void>;
     updateRoom: (room: Room) => void;
     updateActivity: (activity: Activity) => void;
@@ -14,6 +15,7 @@ interface DataContextType {
     error: string | null;
     updateBookingStatus: (bookingId: string, newStatus: string) => Promise<void>;
     sendMessage: (message: ContactMessage) => Promise<void>;
+    fetchMessages: () => Promise<void>; // Nova função
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -22,6 +24,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [rooms, setRooms] = useState<Room[]>(INITIAL_ROOMS);
     const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
     const [bookings, setBookings] = useState<Booking[]>([]);
+    const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]); // Estado para mensagens
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -80,7 +83,30 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setBookings(mappedBookings);
         } catch (err) {
             console.error('Erro ao buscar reservas:', err);
-            setError('Falha ao carregar reservas');
+            // Não definir erro global para não bloquear a UI caso o backend não esteja configurado
+            // setError('Falha ao carregar reservas');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Buscar mensagens de contacto (Apenas admin consegue ler devido ao RLS)
+    const fetchMessages = async () => {
+        setLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('messages')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            
+            if (data) {
+                setContactMessages(data);
+            }
+        } catch (err) {
+            console.error('Erro ao buscar mensagens:', err);
+            // Não lançamos erro aqui para não quebrar a UI de quem não é admin
         } finally {
             setLoading(false);
         }
@@ -95,7 +121,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const { data: { user } } = await supabase.auth.getUser();
             
             // Converter para o formato do banco de dados
-            // user_id pode ser null se o banco permitir, caso contrário o Supabase retornará erro
             const dbBooking = {
                 user_id: user?.id || null,
                 customer_name: bookingData.customerName,
@@ -119,7 +144,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (error) throw error;
 
             if (data && data[0]) {
-                // Mapear de volta para o formato da aplicação
                 const newBooking: Booking = {
                     id: data[0].id.toString(),
                     customerName: data[0].customer_name,
@@ -168,7 +192,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
             if (error) throw error;
 
-            // Atualizar estado local
             setBookings(prev => 
                 prev.map(booking => 
                     booking.id === bookingId 
@@ -187,80 +210,49 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-// Nova função para enviar mensagens
-const sendMessage = async (name: string, email: string, message: string) => {
-  try {
-    console.log('Enviando mensagem:', { name, email, message });
+    const sendMessage = async (message: ContactMessage) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const { error } = await supabase
+                .from('messages')
+                .insert([{
+                    name: message.name,
+                    email: message.email,
+                    message: message.message
+                }]);
 
-    if (!supabase) {
-      throw new Error('Cliente Supabase não inicializado');
-    }
-
-    const { data, error } = await supabase
-      .from('mensagens')
-      .insert([
-        {
-          name,
-          email,
-          message,
-          created_at: new Date().toISOString(),
-          status: 'sent'
+            if (error) throw error;
+            
+            console.log("Mensagem enviada com sucesso para o Supabase.");
+            
+        } catch (err: any) {
+            console.error('Erro ao enviar mensagem:', err);
+            setError('Falha ao enviar mensagem: ' + (err.message || 'Erro desconhecido'));
+            throw err;
+        } finally {
+            setLoading(false);
         }
-      ])
-      .select();
-
-    if (error) {
-      console.error('Erro detalhado:', error);
-      throw error;
-    }
-
-    console.log('Mensagem salva:', data);
-
-    // Atualizar estado local com a mensagem salva
-    if (data && data[0]) {
-      setMessages(prev => [...prev, data[0]]);
-    } else {
-      // Fallback para quando não retorna dados
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        name,
-        email,
-        message,
-        created_at: new Date().toISOString(),
-        status: 'sent'
-      }]);
-    }
-
-    return { success: true, error: null };
-
-  } catch (error) {
-    console.error('Erro ao enviar mensagem:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
     };
-  }
-};
-  
-  const [messages, setMessages] = useState<ContactMessage[]>([]);
 
-   return (
-    <DataContext.Provider value={{ 
-        rooms, 
-        activities, 
-        bookings, 
-        messages,        // ← ADICIONE ESTA LINHA
-        addBooking, 
-        updateRoom, 
-        updateActivity, 
-        loading, 
-        error, 
-        updateBookingStatus, 
-        sendMessage      // a função sendMessage já está aqui
-    }}> 
-        {children} 
-    </DataContext.Provider>
-);
+    return (
+        <DataContext.Provider value={{
+            rooms,
+            activities,
+            bookings,
+            contactMessages,
+            addBooking,
+            updateRoom,
+            updateActivity,
+            loading,
+            error,
+            updateBookingStatus,
+            sendMessage,
+            fetchMessages
+        }}>
+            {children}
+        </DataContext.Provider>
+    );
 };
 
 export const useData = () => {
@@ -268,5 +260,4 @@ export const useData = () => {
     if (context === undefined) {
         throw new Error('useData must be used within a DataProvider');
     }
-    return context;
-};
+    return context;}
