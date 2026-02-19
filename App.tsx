@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
@@ -47,22 +48,22 @@ const FloatingButtons = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col space-y-4 items-end">
+    <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50 flex flex-col space-y-3 md:space-y-4 items-end">
       {/* Live Chat Window */}
       {chatOpen && (
-        <div className="bg-white rounded-lg shadow-xl w-80 md:w-96 mb-4 overflow-hidden border border-gray-200 animate-fade-in flex flex-col max-h-[500px]">
-           <div className="bg-primary text-white p-4 flex justify-between items-center shadow-sm">
+        <div className="bg-white rounded-lg shadow-xl w-72 md:w-96 mb-2 md:mb-4 overflow-hidden border border-gray-200 animate-fade-in flex flex-col max-h-[400px] md:max-h-[500px]">
+           <div className="bg-primary text-white p-3 md:p-4 flex justify-between items-center shadow-sm">
               <div className="flex items-center space-x-2">
                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                 <span className="font-bold">Chat Online</span>
+                 <span className="font-bold text-sm md:text-base">Chat Online</span>
               </div>
               <button onClick={() => setChatOpen(false)} className="text-white hover:text-gray-200 p-1">✕</button>
            </div>
            
-           <div className="p-4 flex-grow overflow-y-auto bg-gray-50 text-sm space-y-3 h-80">
+           <div className="p-3 md:p-4 flex-grow overflow-y-auto bg-gray-50 text-sm space-y-3 h-64 md:h-80">
               {chatMessages.map((msg, idx) => (
                   <div key={msg.id || idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[85%] p-3 rounded-lg ${
+                      <div className={`max-w-[85%] p-2 md:p-3 rounded-lg ${
                           msg.sender === 'user' 
                             ? 'bg-primary text-white rounded-tr-none' 
                             : 'bg-gray-200 text-gray-800 rounded-tl-none'
@@ -77,12 +78,12 @@ const FloatingButtons = () => {
               <div ref={messagesEndRef} />
            </div>
            
-           <div className="p-3 border-t bg-white">
+           <div className="p-2 md:p-3 border-t bg-white">
               <form onSubmit={handleSend} className="flex items-center space-x-2">
                   <input 
                     type="text" 
                     placeholder="Digite sua mensagem..." 
-                    className="flex-grow border border-gray-300 rounded-full py-2 px-4 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" 
+                    className="flex-grow border border-gray-300 rounded-full py-2 px-3 md:px-4 text-xs md:text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" 
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                   />
@@ -91,7 +92,7 @@ const FloatingButtons = () => {
                     disabled={!inputText.trim()}
                     className="bg-primary text-white p-2 rounded-full hover:bg-secondary transition-colors disabled:opacity-50"
                   >
-                     <Send className="w-4 h-4" />
+                     <Send className="w-3 h-3 md:w-4 md:h-4" />
                   </button>
               </form>
            </div>
@@ -100,10 +101,10 @@ const FloatingButtons = () => {
       
       <button 
         onClick={() => setChatOpen(!chatOpen)}
-        className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-transform hover:scale-110 flex items-center justify-center w-14 h-14"
+        className="bg-blue-600 text-white p-0 rounded-full shadow-lg hover:bg-blue-700 transition-transform hover:scale-110 flex items-center justify-center w-10 h-10 md:w-14 md:h-14"
         title="Chat Ao Vivo"
       >
-        <MessageSquare className="w-6 h-6" />
+        <MessageSquare className="w-5 h-5 md:w-6 md:h-6" />
         {/* Notification badge simulation if needed */}
       </button>
 
@@ -111,10 +112,10 @@ const FloatingButtons = () => {
         href="https://wa.me/244929729931"
         target="_blank"
         rel="noopener noreferrer"
-        className="bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-transform hover:scale-110 flex items-center justify-center w-14 h-14"
+        className="bg-green-500 text-white p-0 rounded-full shadow-lg hover:bg-green-600 transition-transform hover:scale-110 flex items-center justify-center w-10 h-10 md:w-14 md:h-14"
         title="WhatsApp"
       >
-        <MessageCircle className="w-8 h-8" />
+        <MessageCircle className="w-5 h-5 md:w-8 md:h-8" />
       </a>
     </div>
   );
