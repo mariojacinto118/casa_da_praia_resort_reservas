@@ -429,7 +429,7 @@ const Admin: React.FC = () => {
              {/* Tabela de Resultados */}
              <div className="bg-white rounded-lg shadow-sm border border-stone-100 overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left border-collapse min-w-[800px]">
                         <thead>
                             <tr className="bg-stone-50 border-b border-stone-200 text-xs uppercase text-stone-500 font-bold tracking-wider">
                                 <th className="p-4">Hóspede</th>
@@ -540,71 +540,73 @@ const Admin: React.FC = () => {
                 </div>
 
                 <div className="bg-white rounded-lg shadow-sm border border-stone-100 overflow-hidden">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-stone-50 border-b border-stone-200 text-xs uppercase text-stone-500 font-bold tracking-wider">
-                                <th className="p-4">Cliente</th>
-                                <th className="p-4">Data & Hora</th>
-                                <th className="p-4">Pessoas</th>
-                                <th className="p-4">Observações</th>
-                                <th className="p-4">Status</th>
-                                <th className="p-4 text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-stone-100">
-                             {tableReservations.length === 0 ? (
-                                <tr><td colSpan={6} className="p-12 text-center text-stone-400">Nenhuma reserva de mesa encontrada.</td></tr>
-                             ) : (
-                                tableReservations.map(res => (
-                                    <tr key={res.id} className="hover:bg-stone-50/50">
-                                        <td className="p-4">
-                                            <div className="font-bold text-primary">{res.name}</div>
-                                            <div className="text-xs text-stone-500">{res.phone}</div>
-                                            <div className="text-xs text-stone-400">{res.email}</div>
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="font-medium text-stone-800">{new Date(res.date).toLocaleDateString()}</div>
-                                            <div className="text-sm text-secondary font-bold">{res.time}</div>
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="flex items-center text-stone-600">
-                                                <Users className="w-4 h-4 mr-2" /> {res.guests}
-                                            </div>
-                                        </td>
-                                        <td className="p-4 max-w-xs truncate text-stone-500 italic text-sm">
-                                            {res.specialRequests || '-'}
-                                        </td>
-                                        <td className="p-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
-                                                ${res.status === 'confirmed' ? 'bg-green-100 text-green-800' : 
-                                                  res.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                                  'bg-red-100 text-red-800'}`}>
-                                                {res.status === 'pending' ? 'Pendente' : res.status === 'confirmed' ? 'Confirmado' : 'Cancelado'}
-                                            </span>
-                                        </td>
-                                        <td className="p-4 text-right">
-                                            {res.status === 'pending' && (
-                                                <div className="flex justify-end gap-2">
-                                                    <button onClick={() => handleTableStatusUpdate(res.id!, 'confirmed')} className="p-1.5 text-green-600 hover:bg-green-50 rounded" title="Confirmar"><Check className="w-5 h-5" /></button>
-                                                    <button onClick={() => handleTableStatusUpdate(res.id!, 'cancelled')} className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Cancelar"><X className="w-5 h-5" /></button>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse min-w-[600px]">
+                            <thead>
+                                <tr className="bg-stone-50 border-b border-stone-200 text-xs uppercase text-stone-500 font-bold tracking-wider">
+                                    <th className="p-4">Cliente</th>
+                                    <th className="p-4">Data & Hora</th>
+                                    <th className="p-4">Pessoas</th>
+                                    <th className="p-4">Observações</th>
+                                    <th className="p-4">Status</th>
+                                    <th className="p-4 text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-stone-100">
+                                {tableReservations.length === 0 ? (
+                                    <tr><td colSpan={6} className="p-12 text-center text-stone-400">Nenhuma reserva de mesa encontrada.</td></tr>
+                                ) : (
+                                    tableReservations.map(res => (
+                                        <tr key={res.id} className="hover:bg-stone-50/50">
+                                            <td className="p-4">
+                                                <div className="font-bold text-primary">{res.name}</div>
+                                                <div className="text-xs text-stone-500">{res.phone}</div>
+                                                <div className="text-xs text-stone-400">{res.email}</div>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="font-medium text-stone-800">{new Date(res.date).toLocaleDateString()}</div>
+                                                <div className="text-sm text-secondary font-bold">{res.time}</div>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center text-stone-600">
+                                                    <Users className="w-4 h-4 mr-2" /> {res.guests}
                                                 </div>
-                                            )}
-                                            {res.status === 'confirmed' && (
-                                                 <button onClick={() => handleTableStatusUpdate(res.id!, 'cancelled')} className="text-xs text-red-400 hover:underline">Cancelar</button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))
-                             )}
-                        </tbody>
-                    </table>
+                                            </td>
+                                            <td className="p-4 max-w-xs truncate text-stone-500 italic text-sm">
+                                                {res.specialRequests || '-'}
+                                            </td>
+                                            <td className="p-4">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
+                                                    ${res.status === 'confirmed' ? 'bg-green-100 text-green-800' : 
+                                                    res.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                                    'bg-red-100 text-red-800'}`}>
+                                                    {res.status === 'pending' ? 'Pendente' : res.status === 'confirmed' ? 'Confirmado' : 'Cancelado'}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-right">
+                                                {res.status === 'pending' && (
+                                                    <div className="flex justify-end gap-2">
+                                                        <button onClick={() => handleTableStatusUpdate(res.id!, 'confirmed')} className="p-1.5 text-green-600 hover:bg-green-50 rounded" title="Confirmar"><Check className="w-5 h-5" /></button>
+                                                        <button onClick={() => handleTableStatusUpdate(res.id!, 'cancelled')} className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Cancelar"><X className="w-5 h-5" /></button>
+                                                    </div>
+                                                )}
+                                                {res.status === 'confirmed' && (
+                                                    <button onClick={() => handleTableStatusUpdate(res.id!, 'cancelled')} className="text-xs text-red-400 hover:underline">Cancelar</button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         )}
 
         {/* --- CALENDAR TAB --- */}
         {activeTab === 'calendar' && (
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-stone-100 animate-fade-in overflow-hidden">
+            <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm border border-stone-100 animate-fade-in">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold font-serif text-primary">
                         {currentDate.toLocaleDateString('pt-AO', { month: 'long', year: 'numeric' })}
@@ -616,7 +618,7 @@ const Admin: React.FC = () => {
                 </div>
 
                 <div className="overflow-x-auto pb-4">
-                    <table className="min-w-full border-collapse text-xs">
+                    <table className="min-w-[800px] w-full border-collapse text-xs">
                         <thead>
                             <tr>
                                 <th className="p-3 bg-stone-50 text-left border-b border-r border-stone-200 font-bold text-stone-600 sticky left-0 z-10 w-48">Acomodação</th>
