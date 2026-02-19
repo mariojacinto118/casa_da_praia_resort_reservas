@@ -48,6 +48,13 @@ const Booking: React.FC = () => {
     window.scrollTo(0, 0);
   }, [step]);
 
+  // Request Notification Permission
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+  }, []);
+
   // Pre-fill user data if logged in
   useEffect(() => {
       if (user) {
@@ -213,6 +220,15 @@ const Booking: React.FC = () => {
         };
         
         await addBooking(newBooking);
+
+        // Notificação Nativa
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification("Reserva Recebida! 🏨", {
+                body: `Olá ${formData.name}, recebemos seu pedido de reserva para ${formData.checkIn}. Por favor, anexe o comprovativo na página de perfil.`,
+                icon: '/vite.svg',
+                vibrate: [200, 100, 200]
+            } as any);
+        }
         
         // Redireciona para o perfil com mensagem de sucesso
         navigate('/profile?new=true');

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useData } from '../context/DataContext';
-import { useAuth } from '../context/AuthContext'; // Assumindo que você tem um AuthContext
-import { Booking } from '../types';
+import { useData } from './context/DataContext';
+import { useAuth } from './context/AuthContext'; // Assumindo que você tem um AuthContext
+import { Booking } from './types';
 
 const AdminBookings = () => {
     const { bookings, updateBookingStatus, loading } = useData();

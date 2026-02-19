@@ -57,9 +57,23 @@ const Footer: React.FC = () => {
           <div className="space-y-6">
              <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-secondary">Social</h4>
              <div className="flex space-x-6">
-                <a href="#" className="hover:text-secondary transition-colors" aria-label="Instagram"><Instagram strokeWidth={1.5} /></a>
+                <a 
+                  href="https://www.instagram.com/resort.casa.da.praia?igsh=bXRwOTd6b2oxNmE0" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-secondary transition-colors" 
+                  aria-label="Instagram"
+                >
+                  <Instagram strokeWidth={1.5} />
+                </a>
                 <a href="#" className="hover:text-secondary transition-colors" aria-label="Facebook"><Facebook strokeWidth={1.5} /></a>
-                <a href="#" className="hover:text-secondary transition-colors" aria-label="TikTok">
+                <a 
+                  href="https://www.tiktok.com/@casa.da.praia16?_r=1&_t=ZS-943N8Nl0h3U" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-secondary transition-colors" 
+                  aria-label="TikTok"
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
                   </svg>

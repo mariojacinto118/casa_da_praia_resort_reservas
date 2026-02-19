@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt">
   <head>
@@ -5,6 +6,11 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Casa da Praia | Resort de Luxo em Angola</title>
+    
+    <!-- PWA Settings -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1A3C34" />
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,20 +41,13 @@
       /* Smooth scrolling */
       html {
         scroll-behavior: smooth;
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
       }
-      /* Custom scrollbar */
+      
+      /* Hide scrollbar for Chrome, Safari and Opera */
       ::-webkit-scrollbar {
-        width: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #FAFAF9;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #1A3C34;
-        border-radius: 0px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #142e28;
+        display: none;
       }
       
       .text-shadow {
@@ -92,6 +91,7 @@ button:hover {
   }
 }
 </script>
+<!-- Service Worker removed -->
 <link rel="stylesheet" href="/index.css">
 </head>
   <body class="bg-light text-gray-800 font-sans antialiased selection:bg-secondary selection:text-white">

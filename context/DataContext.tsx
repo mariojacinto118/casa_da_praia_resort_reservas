@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Room, Activity, Booking, ContactMessage, ChatMessage } from './types';
+import { Room, Activity, Booking, ContactMessage, ChatMessage, TableReservation } from './types';
 import { INITIAL_ROOMS, INITIAL_ACTIVITIES } from '../constants';
 import { supabase } from '../supabase';
 
@@ -10,6 +10,7 @@ interface DataContextType {
     bookings: Booking[];
     contactMessages: ContactMessage[];
     chatMessages: ChatMessage[]; 
+    tableReservations: TableReservation[]; // Nova lista
     addBooking: (booking: Omit<Booking, 'id' | 'createdAt'>) => Promise<void>;
     updateRoom: (room: Room) => Promise<void>;
     updateActivity: (activity: Activity) => void;
@@ -21,6 +22,9 @@ interface DataContextType {
     sendChatMessage: (text: string, isAdmin?: boolean, targetSessionId?: string) => Promise<ChatMessage | null>;
     getAvailableQuantity: (roomId: string, checkIn: string, checkOut: string) => number;
     refreshBookings: () => Promise<void>;
+    addTableReservation: (reservation: TableReservation) => Promise<void>;
+    fetchTableReservations: () => Promise<void>; // Nova função
+    updateTableReservationStatus: (id: string, status: 'confirmed' | 'cancelled') => Promise<void>; // Nova função
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -30,6 +34,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
+    const [tableReservations, setTableReservations] = useState<TableReservation[]>([]); // Novo estado
     
     // Chat States
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -176,7 +181,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 status: item.status,
                 paymentMethod: item.payment_method,
                 paymentDetails: item.payment_details || undefined,
-                receiptUrl: item.receipt_url, // Atualizado para ler do banco
+                receiptUrl: item.receipt_url, 
                 createdAt: item.created_at
             }));
 
@@ -205,6 +210,55 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             console.error('Erro ao buscar mensagens:', err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchTableReservations = async () => {
+        setLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('table_reservations')
+                .select('*')
+                .order('reservation_date', { ascending: false });
+
+            if (error) throw error;
+
+            const mappedReservations: TableReservation[] = data.map(item => ({
+                id: item.id,
+                name: item.name,
+                email: item.email,
+                phone: item.phone,
+                date: item.reservation_date,
+                time: item.reservation_time,
+                guests: item.guests,
+                specialRequests: item.special_requests,
+                status: item.status,
+                created_at: item.created_at
+            }));
+
+            setTableReservations(mappedReservations);
+        } catch (err) {
+            console.error('Erro ao buscar reservas de mesa:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const updateTableReservationStatus = async (id: string, status: 'confirmed' | 'cancelled') => {
+        try {
+            const { error } = await supabase
+                .from('table_reservations')
+                .update({ status })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            setTableReservations(prev => 
+                prev.map(res => res.id === id ? { ...res, status } : res)
+            );
+        } catch (err) {
+             console.error('Erro ao atualizar status da mesa:', err);
+             throw err;
         }
     };
 
@@ -258,7 +312,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     status: data[0].status,
                     paymentMethod: data[0].payment_method,
                     paymentDetails: data[0].payment_details,
-                    receiptUrl: data[0].receipt_url, // Atualizado para ler do banco
+                    receiptUrl: data[0].receipt_url, 
                     createdAt: data[0].created_at
                 };
                 
@@ -273,24 +327,49 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
+    const addTableReservation = async (reservation: TableReservation) => {
+        setLoading(true);
+        try {
+            const { error } = await supabase
+                .from('table_reservations')
+                .insert([{
+                    name: reservation.name,
+                    email: reservation.email,
+                    phone: reservation.phone,
+                    reservation_date: reservation.date,
+                    reservation_time: reservation.time,
+                    guests: reservation.guests,
+                    special_requests: reservation.specialRequests,
+                    status: 'pending'
+                }]);
+
+            if (error) throw error;
+
+        } catch (err: any) {
+            console.error('Erro ao reservar mesa:', err);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const updateRoom = async (updatedRoom: Room) => {
-        // 1. Atualiza estado local (para refletir na UI imediatamente)
+        // 1. Atualiza estado local 
         const newRooms = rooms.map(r => r.id === updatedRoom.id ? updatedRoom : r);
         setRooms(newRooms);
 
-        // 2. Salva a quantidade no Supabase (Inventário Real)
+        // 2. Salva a quantidade no Supabase
         try {
             const { error } = await supabase
                 .from('rooms')
                 .upsert({ 
                     id: updatedRoom.id, 
                     quantity: updatedRoom.quantity,
-                    name: updatedRoom.name // Mantém o nome sincronizado
+                    name: updatedRoom.name 
                 });
             
             if (error) {
                 console.error("Erro ao salvar inventário no Supabase:", error);
-                // Não revertemos o estado local para não travar a UI, mas logamos o erro
             }
         } catch (err) {
             console.error("Erro de conexão ao atualizar quarto:", err);
@@ -322,7 +401,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             );
         } catch (err: any) {
             console.error('Erro ao atualizar status:', err);
-            alert(`Erro ao atualizar status: ${err.message || 'Erro de permissão ou conexão'}. Verifique as Políticas RLS no Supabase.`);
+            alert(`Erro ao atualizar status: ${err.message || 'Erro de permissão ou conexão'}.`);
             setError('Falha ao atualizar status da reserva');
         } finally {
             setLoading(false);
@@ -380,31 +459,22 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    // LÓGICA DE DISPONIBILIDADE (Inventário Real)
     const getAvailableQuantity = (roomId: string, checkIn: string, checkOut: string): number => {
         if (!checkIn || !checkOut) return -1;
-
         const targetRoom = rooms.find(r => r.id === roomId);
         if (!targetRoom) return 0;
-
         const requestStart = new Date(checkIn);
         const requestEnd = new Date(checkOut);
-        
         if (requestStart >= requestEnd) return 0;
-
         const overlappingBookings = bookings.filter(b => {
             if (b.roomId !== roomId) return false;
             if (b.status === 'cancelled') return false; 
-
             const bookingStart = new Date(b.checkIn);
             const bookingEnd = new Date(b.checkOut);
-
             return (requestStart < bookingEnd) && (requestEnd > bookingStart);
         });
-
         const totalInventory = targetRoom.quantity || 0;
         const available = totalInventory - overlappingBookings.length;
-
         return Math.max(0, available);
     };
 
@@ -415,6 +485,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             bookings,
             contactMessages,
             chatMessages,
+            tableReservations,
             addBooking,
             updateRoom,
             updateActivity,
@@ -425,7 +496,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             fetchMessages,
             sendChatMessage,
             getAvailableQuantity,
-            refreshBookings: fetchBookings
+            refreshBookings: fetchBookings,
+            addTableReservation,
+            fetchTableReservations,
+            updateTableReservationStatus
         }}>
             {children}
         </DataContext.Provider>
