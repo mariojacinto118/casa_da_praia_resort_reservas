@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Clock, Send, Check } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, Check, AlertCircle } from 'lucide-react';
 import { RESORT_INFO } from '../constants';
 import { useData } from '../context/DataContext';
 
@@ -11,20 +11,26 @@ const Contact: React.FC = () => {
     message: ''
   });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
+    setErrorMessage(null);
 
     try {
       await sendMessage(formData);
       setStatus('success');
       setFormData({ name: '', email: '', message: '' });
       
-      // Resetar status após 3 segundos
-      setTimeout(() => setStatus('idle'), 3000);
-    } catch (error) {
+      // Resetar status após 5 segundos
+      setTimeout(() => setStatus('idle'), 5000);
+    } catch (error: any) {
+      console.error("Erro no formulário:", error);
       setStatus('error');
+      // Tenta pegar a mensagem de erro mais descritiva possível
+      const msg = error.message || error.error_description || "Erro desconhecido. Verifique a console.";
+      setErrorMessage(msg);
     }
   };
 
@@ -93,7 +99,8 @@ const Contact: React.FC = () => {
                       value={formData.name}
                       onChange={handleChange}
                       required
-                      className="w-full border border-gray-300 p-3 rounded focus:outline-none focus:border-primary" 
+                      disabled={status === 'loading'}
+                      className="w-full border border-gray-300 p-3 rounded focus:outline-none focus:border-primary disabled:bg-gray-100" 
                     />
                     <input 
                       type="email" 
@@ -102,7 +109,8 @@ const Contact: React.FC = () => {
                       value={formData.email}
                       onChange={handleChange}
                       required
-                      className="w-full border border-gray-300 p-3 rounded focus:outline-none focus:border-primary" 
+                      disabled={status === 'loading'}
+                      className="w-full border border-gray-300 p-3 rounded focus:outline-none focus:border-primary disabled:bg-gray-100" 
                     />
                     <textarea 
                       name="message"
@@ -111,7 +119,8 @@ const Contact: React.FC = () => {
                       value={formData.message}
                       onChange={handleChange}
                       required
-                      className="w-full border border-gray-300 p-3 rounded focus:outline-none focus:border-primary"
+                      disabled={status === 'loading'}
+                      className="w-full border border-gray-300 p-3 rounded focus:outline-none focus:border-primary disabled:bg-gray-100"
                     ></textarea>
                     
                     <button 
@@ -135,7 +144,16 @@ const Contact: React.FC = () => {
                     </button>
                     
                     {status === 'error' && (
-                      <p className="text-red-500 text-sm text-center">Ocorreu um erro ao enviar. Tente novamente.</p>
+                      <div className="bg-red-50 border border-red-200 rounded p-4 mt-4 animate-fade-in">
+                        <div className="flex items-center text-red-700 font-bold mb-1">
+                          <AlertCircle className="w-4 h-4 mr-2" />
+                          Erro ao enviar
+                        </div>
+                        <p className="text-sm text-red-600 mb-2">{errorMessage}</p>
+                        <p className="text-xs text-gray-500">
+                          Se o erro for relacionado a "RLS" ou "policy", execute o script SQL de permissões no Supabase.
+                        </p>
+                      </div>
                     )}
                  </form>
               </div>

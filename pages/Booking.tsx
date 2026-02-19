@@ -1,15 +1,22 @@
+
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { EXTRA_MATTRESS } from '../constants';
 import { useLanguage } from '../context/LanguageContext';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle, CreditCard, Lock } from 'lucide-react';
+import { CheckCircle, Lock, Calendar as CalendarIcon, CreditCard, Copy, AlertCircle, ArrowRight, AlertTriangle, ChevronLeft, ChevronRight, Upload } from 'lucide-react';
 import { Booking as BookingType } from '../types';
+
+const BANK_DETAILS = {
+    bank: "Banco BAI",
+    iban: "AO06 0040 0000 1234 5678 9012 3",
+    beneficiary: "Casa da Praia Resort Lda"
+};
 
 const Booking: React.FC = () => {
   const { t } = useLanguage();
-  const { rooms, activities, addBooking } = useData();
+  const { rooms, activities, bookings, addBooking, getAvailableQuantity } = useData();
   const { user, loading: authLoading } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -29,10 +36,13 @@ const Booking: React.FC = () => {
     activities: [] as string[],
     extraMattressChild: 0,
     extraMattressAdult: 0,
-    paymentMethod: 'transfer',
   });
+  
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Calendar State
+  const [viewDate, setViewDate] = useState(new Date());
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -44,7 +54,8 @@ const Booking: React.FC = () => {
           setFormData(prev => ({
               ...prev,
               email: user.email || '',
-              name: user.user_metadata?.full_name || ''
+              name: user.user_metadata?.full_name || '',
+              phone: user.user_metadata?.phone || prev.phone
           }));
       }
   }, [user]);
@@ -88,41 +99,132 @@ const Booking: React.FC = () => {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const copyToClipboard = () => {
+      navigator.clipboard.writeText(BANK_DETAILS.iban);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+  };
 
-    const newBooking: BookingType = {
-      id: Date.now().toString(),
-      customerName: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      checkIn: formData.checkIn,
-      checkOut: formData.checkOut,
-      guests: {
-        adults: Number(formData.adults),
-        children: Number(formData.children)
-      },
-      roomId: formData.roomId,
-      activities: formData.activities,
-      totalAmount: calculateTotal(),
-      status: 'pending',
-      paymentMethod: formData.paymentMethod as 'multicaixa' | 'card' | 'transfer',
-      createdAt: new Date().toISOString(),
-    };
-    
-    try {
-      await addBooking(newBooking);
-      setSuccess(true);
-    } catch (error: any) {
-      console.error("Booking error:", error);
-      alert("Ocorreu um erro ao processar sua reserva. Por favor, tente novamente.");
-    } finally {
-      setLoading(false);
+  // --- CALENDAR LOGIC START ---
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  };
+
+  const changeMonth = (offset: number) => {
+    const newDate = new Date(viewDate.setMonth(viewDate.getMonth() + offset));
+    setViewDate(new Date(newDate));
+  };
+
+  const getDayStatus = (day: number) => {
+    const targetDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+    targetDate.setHours(12, 0, 0, 0); 
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if (targetDate < today) return { status: 'past', available: 0 };
+
+    let totalCapacity = 0;
+    let totalBooked = 0;
+
+    const roomsToCheck = formData.roomId 
+        ? rooms.filter(r => r.id === formData.roomId) 
+        : rooms;
+
+    roomsToCheck.forEach(room => {
+        totalCapacity += (room.quantity || 0);
+        const roomBookings = bookings.filter(b => 
+            b.roomId === room.id && 
+            b.status !== 'cancelled' &&
+            new Date(b.checkIn) <= targetDate && 
+            new Date(b.checkOut) > targetDate
+        );
+        totalBooked += roomBookings.length;
+    });
+
+    const available = totalCapacity - totalBooked;
+
+    if (available <= 0) return { status: 'full', available: 0 };
+    if (available <= 2) return { status: 'low', available };
+    return { status: 'open', available };
+  };
+
+  const handleDateClick = (day: number, status: string) => {
+    if (status === 'full' || status === 'past') return;
+
+    const selectedDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+    const dateStr = selectedDate.toISOString().split('T')[0];
+
+    if (!formData.checkIn || (formData.checkIn && formData.checkOut)) {
+        setFormData(prev => ({ ...prev, checkIn: dateStr, checkOut: '' }));
+    } else if (formData.checkIn && !formData.checkOut) {
+        if (new Date(dateStr) > new Date(formData.checkIn)) {
+             setFormData(prev => ({ ...prev, checkOut: dateStr }));
+        } else {
+             setFormData(prev => ({ ...prev, checkIn: dateStr, checkOut: '' }));
+        }
     }
   };
 
-  // 1. Loading State for Auth
+  const isSelected = (day: number) => {
+      const current = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+      const str = current.toISOString().split('T')[0];
+      
+      if (formData.checkIn === str) return 'start';
+      if (formData.checkOut === str) return 'end';
+      
+      if (formData.checkIn && formData.checkOut) {
+          if (current > new Date(formData.checkIn) && current < new Date(formData.checkOut)) return 'middle';
+      }
+      return null;
+  };
+  // --- CALENDAR LOGIC END ---
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validações básicas
+    const availableQty = getAvailableQuantity(formData.roomId, formData.checkIn, formData.checkOut);
+    if (availableQty !== -1 && availableQty <= 0) {
+          alert("Desculpe, este quarto acabou de ser reservado para estas datas.");
+          return;
+    }
+
+    setLoading(true);
+    try {
+        const total = calculateTotal();
+        const newBooking: Omit<BookingType, 'id' | 'createdAt'> = {
+            customerName: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            checkIn: formData.checkIn,
+            checkOut: formData.checkOut,
+            guests: {
+            adults: Number(formData.adults),
+            children: Number(formData.children)
+            },
+            roomId: formData.roomId,
+            activities: formData.activities,
+            totalAmount: total,
+            status: 'pending', // Sempre pendente até o upload
+            paymentMethod: 'transfer',
+        };
+        
+        await addBooking(newBooking);
+        
+        // Redireciona para o perfil com mensagem de sucesso
+        navigate('/profile?new=true');
+
+    } catch (error: any) {
+        console.error("Booking error:", error);
+        alert("Erro ao criar reserva: " + error.message);
+    } finally {
+        setLoading(false);
+    }
+  };
+
   if (authLoading) {
     return (
         <div className="min-h-screen pt-24 flex items-center justify-center bg-light">
@@ -131,7 +233,6 @@ const Booking: React.FC = () => {
     );
   }
 
-  // 2. Block access if not logged in
   if (!user) {
     return (
         <div className="min-h-screen pt-24 pb-20 bg-light flex flex-col items-center justify-center px-4">
@@ -159,36 +260,8 @@ const Booking: React.FC = () => {
                         Criar nova conta
                     </Link>
                 </div>
-                <p className="mt-6 text-xs text-gray-400">
-                    Ainda não tem conta? O registo leva menos de 1 minuto.
-                </p>
             </div>
         </div>
-    );
-  }
-
-  if (success) {
-    return (
-      <div className="min-h-screen pt-24 bg-light flex items-center justify-center px-4">
-        <div className="bg-white p-8 rounded-lg shadow-xl text-center max-w-lg w-full">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-green-600" />
-          </div>
-          <h2 className="font-serif text-3xl font-bold text-primary mb-2">{t('successTitle')}</h2>
-          <p className="text-gray-600 mb-6">{t('successMsg')}</p>
-          <div className="bg-gray-50 p-4 rounded text-left mb-6 text-sm text-gray-700">
-             <p><strong>Referência:</strong> #{Date.now().toString().slice(-6)}</p>
-             <p><strong>Total:</strong> {calculateTotal().toLocaleString('pt-AO')} Kz</p>
-             <p className="mt-2 text-xs text-gray-500">* Por favor, verifique seu email para instruções de pagamento.</p>
-          </div>
-          <button 
-            onClick={() => window.location.href = '/'}
-            className="w-full bg-primary text-white py-3 rounded-sm font-bold uppercase hover:bg-secondary hover:text-primary transition-colors"
-          >
-            Voltar ao Início
-          </button>
-        </div>
-      </div>
     );
   }
 
@@ -197,6 +270,7 @@ const Booking: React.FC = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="font-serif text-4xl font-bold text-primary mb-8 text-center">Faça sua Reserva</h1>
         
+        {/* Stepper */}
         <div className="flex justify-center mb-10">
           <div className="flex items-center space-x-4">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step >= 1 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>1</div>
@@ -209,35 +283,99 @@ const Booking: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-lg shadow-md">
+            <form onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-lg shadow-md relative">
               
               {step === 1 && (
                 <div className="space-y-6 animate-fade-in">
-                  <h2 className="text-xl font-bold border-b pb-2 mb-4">Datas e Acomodação</h2>
+                  <h2 className="text-xl font-bold border-b pb-2 mb-4 flex justify-between items-center">
+                      <span>Datas e Acomodação</span>
+                  </h2>
+
+                  {/* --- CALENDÁRIO VISUAL --- */}
+                  <div className="border rounded-lg p-4 bg-gray-50">
+                      <div className="flex justify-between items-center mb-4">
+                          <button type="button" onClick={() => changeMonth(-1)} className="p-2 hover:bg-gray-200 rounded-full"><ChevronLeft className="w-5 h-5" /></button>
+                          <span className="font-bold text-lg capitalize">{viewDate.toLocaleDateString('pt-AO', { month: 'long', year: 'numeric' })}</span>
+                          <button type="button" onClick={() => changeMonth(1)} className="p-2 hover:bg-gray-200 rounded-full"><ChevronRight className="w-5 h-5" /></button>
+                      </div>
+                      
+                      <div className="mb-2 flex gap-4 text-xs justify-center flex-wrap">
+                          <div className="flex items-center"><div className="w-3 h-3 bg-white border mr-1 rounded"></div> Disponível</div>
+                          <div className="flex items-center"><div className="w-3 h-3 bg-orange-100 border border-orange-200 mr-1 rounded"></div> Poucas Vagas</div>
+                          <div className="flex items-center"><div className="w-3 h-3 bg-red-100 mr-1 rounded"></div> Esgotado</div>
+                          <div className="flex items-center"><div className="w-3 h-3 bg-primary mr-1 rounded"></div> Sua Seleção</div>
+                      </div>
+
+                      <div className="grid grid-cols-7 gap-1 text-center mb-2">
+                          {['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(d => <div key={d} className="text-xs font-bold text-gray-400 uppercase">{d}</div>)}
+                      </div>
+                      
+                      <div className="grid grid-cols-7 gap-1">
+                          {Array.from({ length: getFirstDayOfMonth(viewDate) }).map((_, i) => <div key={`empty-${i}`} />)}
+                          
+                          {Array.from({ length: getDaysInMonth(viewDate) }).map((_, i) => {
+                              const day = i + 1;
+                              const { status, available } = getDayStatus(day);
+                              const selection = isSelected(day);
+                              
+                              let bgClass = "bg-white hover:bg-gray-100 cursor-pointer";
+                              if (status === 'full') bgClass = "bg-red-50 text-red-300 cursor-not-allowed";
+                              if (status === 'past') bgClass = "bg-gray-100 text-gray-300 cursor-not-allowed";
+                              if (status === 'low') bgClass = "bg-orange-50 hover:bg-orange-100 cursor-pointer text-orange-800 font-medium";
+
+                              if (selection === 'start') bgClass = "bg-primary text-white rounded-l-full hover:bg-primary";
+                              if (selection === 'end') bgClass = "bg-primary text-white rounded-r-full hover:bg-primary";
+                              if (selection === 'middle') bgClass = "bg-primary/20 text-primary hover:bg-primary/30";
+
+                              return (
+                                  <div 
+                                    key={day} 
+                                    onClick={() => handleDateClick(day, status)}
+                                    className={`h-10 flex flex-col items-center justify-center text-sm rounded-sm transition-colors relative group ${bgClass}`}
+                                  >
+                                      <span>{day}</span>
+                                      {status !== 'past' && status !== 'full' && !selection && (
+                                          <span className="text-[9px] leading-none opacity-0 group-hover:opacity-100 absolute -bottom-4 bg-black text-white px-1 rounded z-10 whitespace-nowrap">
+                                              {available} livres
+                                          </span>
+                                      )}
+                                  </div>
+                              );
+                          })}
+                      </div>
+                      <p className="text-xs text-center mt-3 text-gray-500 italic">
+                          {formData.roomId ? `Mostrando disponibilidade para: ${rooms.find(r => r.id === formData.roomId)?.name}` : 'Mostrando disponibilidade geral. Selecione um quarto abaixo para filtrar.'}
+                      </p>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Check-in</label>
-                      <input 
-                        type="date" 
-                        name="checkIn"
-                        required
-                        min={new Date().toISOString().split('T')[0]}
-                        value={formData.checkIn}
-                        onChange={handleInputChange}
-                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-primary focus:border-primary"
-                      />
+                      <div className="relative">
+                          <input 
+                            type="date" 
+                            name="checkIn"
+                            required
+                            readOnly
+                            value={formData.checkIn}
+                            className="w-full border border-gray-300 rounded-md p-2 bg-gray-50 cursor-not-allowed"
+                          />
+                          <CalendarIcon className="absolute right-2 top-2 w-5 h-5 text-gray-400" />
+                      </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Check-out</label>
-                      <input 
-                        type="date" 
-                        name="checkOut"
-                        required
-                        min={formData.checkIn || new Date().toISOString().split('T')[0]}
-                        value={formData.checkOut}
-                        onChange={handleInputChange}
-                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-primary focus:border-primary"
-                      />
+                       <div className="relative">
+                          <input 
+                            type="date" 
+                            name="checkOut"
+                            required
+                            readOnly
+                            value={formData.checkOut}
+                            className="w-full border border-gray-300 rounded-md p-2 bg-gray-50 cursor-not-allowed"
+                          />
+                          <CalendarIcon className="absolute right-2 top-2 w-5 h-5 text-gray-400" />
+                      </div>
                     </div>
                   </div>
 
@@ -257,27 +395,71 @@ const Booking: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Escolha a Suite</label>
-                    <div className="grid grid-cols-1 gap-4 max-h-96 overflow-y-auto">
-                      {rooms.map(room => (
-                        <div 
-                          key={room.id}
-                          onClick={() => setFormData({...formData, roomId: room.id})}
-                          className={`border rounded-lg p-4 cursor-pointer flex justify-between items-center transition-all ${formData.roomId === room.id ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'hover:border-gray-400'}`}
-                        >
-                          <div className="flex items-center space-x-4">
-                             <img src={room.image} alt={room.name} className="w-16 h-16 object-cover rounded" />
-                             <div>
-                               <h3 className="font-bold text-gray-900">{room.name}</h3>
-                               <p className="text-sm text-gray-500">{room.capacity} Pessoas • {room.features[0]}</p>
-                             </div>
+                    <div className="flex justify-between items-center mb-1">
+                        <label className="block text-sm font-medium text-gray-700">Escolha a Suite</label>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 gap-4 max-h-96 overflow-y-auto pr-1">
+                      {rooms.map(room => {
+                        let availableQty = 0;
+                        let isSoldOut = false;
+                        
+                        if (formData.checkIn && formData.checkOut) {
+                            availableQty = getAvailableQuantity(room.id, formData.checkIn, formData.checkOut);
+                            isSoldOut = availableQty <= 0;
+                        }
+
+                        const datesSelected = !!formData.checkIn && !!formData.checkOut;
+                        const disabled = (datesSelected && isSoldOut) || !room.available;
+
+                        return (
+                          <div 
+                            key={room.id}
+                            onClick={() => {
+                                if(!disabled) {
+                                    setFormData({...formData, roomId: room.id});
+                                }
+                            }}
+                            className={`
+                                border rounded-lg p-4 flex justify-between items-center transition-all relative overflow-hidden group
+                                ${disabled ? 'opacity-60 bg-gray-100 cursor-not-allowed grayscale' : 'cursor-pointer hover:border-primary'}
+                                ${formData.roomId === room.id && !disabled ? 'border-primary bg-primary/5 ring-1 ring-primary' : ''}
+                            `}
+                          >
+                            {/* Overlay de Esgotado */}
+                            {disabled && datesSelected && (
+                                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
+                                    <span className="bg-red-600 text-white px-3 py-1 text-xs font-bold uppercase tracking-widest transform -rotate-12 shadow-lg">
+                                        Esgotado nas Datas
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* Conteúdo do Card */}
+                            <div className="flex items-center space-x-4">
+                               <img src={room.image} alt={room.name} className="w-16 h-16 object-cover rounded" />
+                               <div>
+                                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                                     {room.name}
+                                     {formData.roomId === room.id && <CheckCircle className="w-4 h-4 text-primary" />}
+                                 </h3>
+                                 <p className="text-sm text-gray-500 mb-1">{room.capacity} Pessoas • {room.features[0]}</p>
+                                 
+                                 {datesSelected && !disabled && availableQty <= 3 && (
+                                     <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full flex items-center w-fit animate-pulse">
+                                         Restam apenas {availableQty}!
+                                     </span>
+                                 )}
+                                 {!datesSelected && <span className="text-xs text-blue-500">Selecione datas para ver disponibilidade</span>}
+                               </div>
+                            </div>
+                            <div className="text-right">
+                               <p className="font-bold text-primary">{room.price.toLocaleString('pt-AO')} Kz</p>
+                               <p className="text-xs text-gray-500">/ noite</p>
+                            </div>
                           </div>
-                          <div className="text-right">
-                             <p className="font-bold text-primary">{room.price.toLocaleString('pt-AO')} Kz</p>
-                             <p className="text-xs text-gray-500">/ noite</p>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                   
@@ -366,7 +548,7 @@ const Booking: React.FC = () => {
                               onChange={handleInputChange}
                               className="w-full border border-gray-300 rounded-md p-2"
                               required 
-                              disabled={!!user} // Disable editing if auto-filled from login
+                              disabled={!!user} 
                             />
                             <input 
                               type="tel" 
@@ -403,46 +585,46 @@ const Booking: React.FC = () => {
 
               {step === 3 && (
                 <div className="space-y-6 animate-fade-in">
-                  <h2 className="text-xl font-bold border-b pb-2 mb-4">Pagamento</h2>
-                  <div className="space-y-3">
-                     <label className="flex items-center space-x-3 p-4 border rounded cursor-pointer hover:bg-gray-50">
-                        <input 
-                          type="radio" 
-                          name="paymentMethod" 
-                          value="transfer" 
-                          checked={formData.paymentMethod === 'transfer'}
-                          onChange={handleInputChange}
-                          className="text-primary focus:ring-primary h-5 w-5"
-                        />
-                        <div className="flex items-center space-x-4 w-full">
-                          <CreditCard className="w-6 h-6 text-gray-500" />
-                          <div>
-                            <span className="block font-bold">Transferência Bancária / Depósito</span>
-                            <span className="block text-xs text-gray-500">Envie o comprovativo após a reserva.</span>
-                          </div>
-                        </div>
-                     </label>
-                     <label className="flex items-center space-x-3 p-4 border rounded cursor-pointer hover:bg-gray-50">
-                        <input 
-                          type="radio" 
-                          name="paymentMethod" 
-                          value="multicaixa" 
-                          checked={formData.paymentMethod === 'multicaixa'}
-                          onChange={handleInputChange}
-                          className="text-primary focus:ring-primary h-5 w-5"
-                        />
-                        <div className="flex items-center space-x-4 w-full">
-                          <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center text-white font-bold text-xs">MC</div>
-                          <div>
-                            <span className="block font-bold">Pagamento por Referência (Multicaixa)</span>
-                            <span className="block text-xs text-gray-500">Pague em qualquer ATM ou Internet Banking.</span>
-                          </div>
-                        </div>
-                     </label>
-                  </div>
+                  <h2 className="text-xl font-bold border-b pb-2 mb-4">Pagamento & Confirmação</h2>
                   
-                  <div className="bg-yellow-50 p-4 rounded border border-yellow-200 text-sm text-yellow-800">
-                    <p><strong>Atenção:</strong> A reserva só será confirmada após a validação do pagamento de 50% do valor total.</p>
+                  {/* DADOS BANCÁRIOS APENAS */}
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 animate-fade-in shadow-sm">
+                        <div className="flex items-center gap-2 mb-4">
+                            <CreditCard className="w-6 h-6 text-primary" />
+                            <h3 className="text-xl font-bold font-serif text-gray-800">Transferência Bancária</h3>
+                        </div>
+                        
+                        <p className="text-sm text-gray-600 mb-6">
+                            Para confirmar a sua reserva, por favor efetue a transferência de <strong>50% do valor</strong> para a conta abaixo e anexe o comprovativo.
+                        </p>
+
+                        <div className="bg-white p-4 rounded border border-gray-200 mb-6">
+                            <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Banco / Beneficiário</p>
+                            <p className="font-bold text-gray-800 mb-4">{BANK_DETAILS.bank} - {BANK_DETAILS.beneficiary}</p>
+                            
+                            <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">IBAN</p>
+                            <div className="flex items-center space-x-3">
+                                <span className="font-mono text-lg md:text-xl tracking-wider text-primary font-bold">{BANK_DETAILS.iban}</span>
+                                <button 
+                                type="button"
+                                onClick={copyToClipboard}
+                                className="text-gray-400 hover:text-primary transition-colors"
+                                >
+                                    {copied ? <CheckCircle className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-3 bg-blue-50 p-4 rounded text-blue-800 text-sm">
+                            <Upload className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                            <div>
+                                <span className="font-bold block mb-1">Passo Importante:</span>
+                                Após clicar em "Finalizar Pedido", você será redirecionado para suas reservas. 
+                                Lá, utilize o botão <strong>"Anexar Comprovativo"</strong> para enviar a foto ou PDF da transferência.
+                                <br/>
+                                <span className="text-xs mt-1 block opacity-80">* Sua reserva ficará pendente até o envio do anexo.</span>
+                            </div>
+                        </div>
                   </div>
 
                   <div className="flex justify-between pt-4">
@@ -454,12 +636,14 @@ const Booking: React.FC = () => {
                     >
                       Voltar
                     </button>
+                    
                     <button 
-                      type="submit"
+                      type="submit" 
                       disabled={loading}
-                      className="bg-secondary text-primary px-8 py-3 rounded-sm font-bold uppercase hover:bg-yellow-500 transition-colors flex items-center space-x-2"
+                      className="px-8 py-3 rounded-sm font-bold uppercase transition-colors flex items-center space-x-2 bg-secondary hover:bg-yellow-500 text-primary"
                     >
-                      {loading ? <span>Processando...</span> : <span>Confirmar Reserva</span>}
+                      {loading ? <span>Processando...</span> : <span>Finalizar Pedido</span>}
+                      {!loading && <ArrowRight className="w-4 h-4 ml-2" />}
                     </button>
                   </div>
                 </div>

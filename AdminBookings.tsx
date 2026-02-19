@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-// Opção 2: Caminho relativo correto
-import { useData } from './context/DataContext';     // ✅ Correto! (com ./)
-import { useAuth } from './context/AuthContext';      // ✅ Correto! (com ./)
-import { Booking } from './types';                     // ✅ Correto! (com ./)
+import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext'; // Assumindo que você tem um AuthContext
+import { Booking } from '../types';
+
 const AdminBookings = () => {
     const { bookings, updateBookingStatus, loading } = useData();
     const { user } = useAuth();

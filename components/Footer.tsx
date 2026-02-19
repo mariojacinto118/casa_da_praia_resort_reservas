@@ -1,9 +1,14 @@
+
 import React from 'react';
 import { MapPin, Phone, Mail, Instagram, Facebook, ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { RESORT_INFO } from '../constants';
+import { RESORT_INFO, ADMIN_EMAILS } from '../constants';
+import { useAuth } from '../context/AuthContext';
 
 const Footer: React.FC = () => {
+  const { user } = useAuth();
+  const isAdmin = user && user.email && ADMIN_EMAILS.includes(user.email);
+
   return (
     <footer className="bg-primary text-white pt-24 pb-12 border-t border-white/10">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
@@ -67,7 +72,9 @@ const Footer: React.FC = () => {
             <ul className="space-y-2 text-white/70 font-light text-sm">
                 <li><Link to="/about" className="hover:text-white transition-colors">Sobre Nós</Link></li>
                 <li><Link to="/policy" className="hover:text-white transition-colors">Política de Cancelamento</Link></li>
-                <li><Link to="/admin" className="hover:text-white transition-colors">Área Restrita</Link></li>
+                {isAdmin && (
+                    <li><Link to="/admin" className="hover:text-white transition-colors">Painel Administrativo</Link></li>
+                )}
             </ul>
           </div>
         </div>

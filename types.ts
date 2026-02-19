@@ -8,6 +8,7 @@ export interface Room {
   features: string[];
   image: string;
   available: boolean;
+  quantity: number; // Campo adicionado para controle de inventário
 }
 
 export interface Activity {
@@ -17,6 +18,14 @@ export interface Activity {
   unit?: string;
   image?: string;
   description?: string;
+}
+
+export interface PaymentDetails {
+  entity?: string;
+  reference?: string;
+  iban?: string;
+  bankName?: string;
+  swift?: string;
 }
 
 export interface Booking {
@@ -33,8 +42,11 @@ export interface Booking {
   roomId: string;
   activities: string[];
   totalAmount: number;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  paymentMethod: 'multicaixa' | 'card' | 'transfer';
+  // Adicionado 'completed' para suportar o fluxo do AdminBookings
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  paymentMethod?: string;
+  paymentDetails?: PaymentDetails;
+  receiptUrl?: string; 
   createdAt: string;
 }
 
@@ -51,6 +63,7 @@ export interface ChatMessage {
   session_id: string;
   sender: 'user' | 'admin';
   message: string;
+  is_read?: boolean;
   created_at: string;
 }
 

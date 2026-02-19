@@ -1,15 +1,19 @@
+
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { Booking } from '../types';
+import { Eye, X, ExternalLink, FileText } from 'lucide-react';
+import { ADMIN_EMAILS } from '../constants';
 
 const AdminBookings = () => {
     const { bookings, updateBookingStatus, loading } = useData();
     const { user } = useAuth();
     const [filter, setFilter] = useState<string>('all');
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-    // Verificar se é admin (você precisa definir seu critério)
-    const isAdmin = user?.email === 'marioantoniojacinto02@gmail.com'; // ou outro critério
+    // Permitir apenas emails na lista de administradores
+    const isAdmin = user && user.email && ADMIN_EMAILS.includes(user.email);
 
     if (!isAdmin) {
         return (
@@ -57,12 +61,21 @@ const AdminBookings = () => {
         }).format(value);
     };
 
+    const handleViewReceipt = (url: string) => {
+        // Se for PDF, abre em nova aba. Se for imagem, abre no modal.
+        if (url.toLowerCase().includes('.pdf')) {
+            window.open(url, '_blank');
+        } else {
+            setPreviewImage(url);
+        }
+    };
+
     if (loading) {
         return <div className="text-center p-8 pt-24">Carregando...</div>;
     }
 
     return (
-        <div className="container mx-auto p-4 pt-24 pb-20">
+        <div className="container mx-auto p-4 pt-24 pb-20 relative">
             <h1 className="text-3xl font-bold mb-6 text-primary">Administração de Reservas</h1>
             
             {/* Filtros */}
@@ -96,13 +109,33 @@ const AdminBookings = () => {
             {/* Lista de Reservas */}
             <div className="grid gap-4">
                 {filteredBookings.map((booking: Booking) => (
-                    <div key={booking.id} className="border rounded-lg p-4 shadow-md bg-white">
+                    <div key={booking.id} className="border rounded-lg p-4 shadow-md bg-white hover:shadow-lg transition-shadow">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {/* Informações do Cliente */}
                             <div>
                                 <h3 className="font-bold text-lg">{booking.customerName}</h3>
                                 <p className="text-sm text-gray-600">{booking.email}</p>
                                 <p className="text-sm text-gray-600">{booking.phone}</p>
+                                {booking.receiptUrl && (
+                                     <div className="mt-2 relative group w-24 h-24">
+                                         {booking.receiptUrl.toLowerCase().includes('.pdf') ? (
+                                            <div 
+                                                onClick={() => handleViewReceipt(booking.receiptUrl!)}
+                                                className="w-full h-full bg-red-50 border border-red-100 flex flex-col items-center justify-center rounded cursor-pointer hover:bg-red-100"
+                                            >
+                                                <FileText className="w-8 h-8 text-red-500" />
+                                                <span className="text-xs font-bold text-red-600 mt-1">PDF</span>
+                                            </div>
+                                         ) : (
+                                            <img 
+                                                src={booking.receiptUrl} 
+                                                alt="Comprovativo" 
+                                                onClick={() => handleViewReceipt(booking.receiptUrl!)}
+                                                className="w-full h-full object-cover rounded border border-gray-200 cursor-zoom-in hover:shadow-lg transition-all"
+                                            />
+                                         )}
+                                     </div>
+                                )}
                             </div>
 
                             {/* Detalhes da Reserva */}
@@ -176,6 +209,36 @@ const AdminBookings = () => {
             {filteredBookings.length === 0 && (
                 <div className="text-center py-12 bg-white rounded shadow">
                     <p className="text-gray-500">Nenhuma reserva encontrada com este filtro.</p>
+                </div>
+            )}
+
+            {/* MODAL DE VISUALIZAÇÃO DE IMAGEM */}
+            {previewImage && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setPreviewImage(null)}>
+                    <div className="relative max-w-4xl w-full max-h-[90vh] bg-transparent flex flex-col items-center" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-end w-full mb-2 space-x-2">
+                            <a 
+                                href={previewImage} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="bg-white/20 hover:bg-white/40 text-white p-2 rounded-full transition-colors"
+                                title="Abrir original"
+                            >
+                                <ExternalLink className="w-6 h-6" />
+                            </a>
+                            <button 
+                                onClick={() => setPreviewImage(null)}
+                                className="bg-white/20 hover:bg-white/40 text-white p-2 rounded-full transition-colors"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <img 
+                            src={previewImage} 
+                            alt="Comprovativo" 
+                            className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl border border-white/20" 
+                        />
+                    </div>
                 </div>
             )}
         </div>

@@ -1,31 +1,26 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Room, Activity, Booking, ContactMessage } from '../types';
+import { Room, Activity, Booking, ContactMessage, ChatMessage } from './types';
 import { INITIAL_ROOMS, INITIAL_ACTIVITIES } from '../constants';
 import { supabase } from '../supabase';
-
-interface ChatMessage {
-    id: number;
-    session_id: string;
-    sender: 'admin' | 'user';
-    message: string;
-    created_at: string;
-}
 
 interface DataContextType {
     rooms: Room[];
     activities: Activity[];
     bookings: Booking[];
     contactMessages: ContactMessage[];
-    chatMessages: ChatMessage[]; // Mensagens do chat (usuário atual)
+    chatMessages: ChatMessage[]; 
     addBooking: (booking: Omit<Booking, 'id' | 'createdAt'>) => Promise<void>;
-    updateRoom: (room: Room) => void;
+    updateRoom: (room: Room) => Promise<void>;
     updateActivity: (activity: Activity) => void;
     loading: boolean;
     error: string | null;
-    updateBookingStatus: (bookingId: string, newStatus: string) => Promise<void>;
+    updateBookingStatus: (bookingId: string, newStatus: Booking['status']) => Promise<void>;
     sendMessage: (message: ContactMessage) => Promise<void>;
     fetchMessages: () => Promise<void>;
-    sendChatMessage: (text: string, isAdmin?: boolean, targetSessionId?: string) => Promise<void>; // Atualizado
+    sendChatMessage: (text: string, isAdmin?: boolean, targetSessionId?: string) => Promise<ChatMessage | null>;
+    getAvailableQuantity: (roomId: string, checkIn: string, checkOut: string) => number;
+    refreshBookings: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -43,9 +38,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Inicialização do Chat (Sessão e Realtime - Lado do Cliente)
+    // Inicialização do Chat
     useEffect(() => {
-        // 1. Identificar ou criar ID da sessão do usuário
         let sid = localStorage.getItem('chat_session_id');
         if (!sid) {
             sid = Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -53,7 +47,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
         setChatSessionId(sid);
 
-        // 2. Carregar histórico inicial (apenas para este usuário)
         const fetchHistory = async () => {
             const { data } = await supabase
                 .from('live_chat')
@@ -62,7 +55,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 .order('created_at', { ascending: true });
             
             if (data) {
-                // Se não houver mensagens, adicionar boas-vindas localmente
                 if (data.length === 0) {
                     setChatMessages([{
                         id: 0,
@@ -78,7 +70,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
         fetchHistory();
 
-        // 3. Inscrever para atualizações em tempo real (Apenas mensagens desta sessão)
         const channel = supabase
             .channel('chat_room_user')
             .on('postgres_changes', 
@@ -86,7 +77,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 (payload) => {
                     const newMsg = payload.new as ChatMessage;
                     setChatMessages(prev => {
-                        // Evitar duplicatas
                         if (prev.find(m => m.id === newMsg.id)) return prev;
                         return [...prev, newMsg];
                     });
@@ -99,21 +89,34 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
     }, []);
 
-    // Carregar reservas do Supabase ao iniciar
     useEffect(() => {
         fetchBookings();
+        fetchRoomInventory(); // Buscar inventário real do Supabase
     }, []);
 
-    // Carregar rooms e activities do localStorage
+    // Carregar dados locais (Preço, Descrição) mas respeitar a quantidade do DB
     useEffect(() => {
         const savedRooms = localStorage.getItem('rooms');
         const savedActivities = localStorage.getItem('activities');
-
-        if (savedRooms) setRooms(JSON.parse(savedRooms));
+        
+        if (savedRooms) {
+            const parsedRooms = JSON.parse(savedRooms);
+            setRooms(prevRooms => {
+                // Mesclar o que veio do localStorage com o estado atual (que pode ter dados do Supabase)
+                return parsedRooms.map((localRoom: Room) => {
+                    const currentRoom = prevRooms.find(r => r.id === localRoom.id);
+                    return {
+                        ...localRoom,
+                        // Se já temos dados do Supabase (currentRoom), usamos a quantidade dele.
+                        // Caso contrário, usamos do localStorage como fallback.
+                        quantity: currentRoom ? currentRoom.quantity : localRoom.quantity
+                    };
+                });
+            });
+        }
         if (savedActivities) setActivities(JSON.parse(savedActivities));
     }, []);
 
-    // Salvar rooms e activities no localStorage
     useEffect(() => {
         localStorage.setItem('rooms', JSON.stringify(rooms));
     }, [rooms]);
@@ -121,6 +124,32 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     useEffect(() => {
         localStorage.setItem('activities', JSON.stringify(activities));
     }, [activities]);
+
+    // Busca a quantidade real de quartos configurada no Supabase
+    const fetchRoomInventory = async () => {
+        try {
+            const { data, error } = await supabase.from('rooms').select('id, quantity');
+            
+            if (error) {
+                console.warn('Erro ao buscar inventário de quartos:', error.message);
+                return;
+            }
+
+            if (data && data.length > 0) {
+                setRooms(prevRooms => {
+                    return prevRooms.map(room => {
+                        const dbRoom = data.find((d: any) => d.id === room.id);
+                        if (dbRoom) {
+                            return { ...room, quantity: dbRoom.quantity };
+                        }
+                        return room;
+                    });
+                });
+            }
+        } catch (err) {
+            console.error('Erro no fetchRoomInventory:', err);
+        }
+    };
 
     const fetchBookings = async () => {
         setLoading(true);
@@ -146,6 +175,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 totalAmount: item.total_amount,
                 status: item.status,
                 paymentMethod: item.payment_method,
+                paymentDetails: item.payment_details || undefined,
+                receiptUrl: item.receipt_url, // Atualizado para ler do banco
                 createdAt: item.created_at
             }));
 
@@ -183,8 +214,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
             const { data: { user } } = await supabase.auth.getUser();
             
+            if (!user) {
+                throw new Error("Sessão expirada. Por favor, faça login novamente.");
+            }
+            
             const dbBooking = {
-                user_id: user?.id || null,
+                user_id: user.id,
                 customer_name: bookingData.customerName,
                 email: bookingData.email,
                 phone: bookingData.phone,
@@ -195,7 +230,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 activities: bookingData.activities,
                 total_amount: bookingData.totalAmount,
                 status: bookingData.status || 'pending',
-                payment_method: bookingData.paymentMethod
+                payment_method: bookingData.paymentMethod || 'transfer',
             };
 
             const { data, error } = await supabase
@@ -203,7 +238,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 .insert([dbBooking])
                 .select();
 
-            if (error) throw error;
+            if (error) {
+                console.error("Erro detalhado do Supabase:", error);
+                throw new Error(error.message);
+            }
 
             if (data && data[0]) {
                 const newBooking: Booking = {
@@ -219,23 +257,44 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     totalAmount: data[0].total_amount,
                     status: data[0].status,
                     paymentMethod: data[0].payment_method,
+                    paymentDetails: data[0].payment_details,
+                    receiptUrl: data[0].receipt_url, // Atualizado para ler do banco
                     createdAt: data[0].created_at
                 };
                 
                 setBookings(prev => [...prev, newBooking]);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Erro ao adicionar reserva:', err);
-            setError('Falha ao criar reserva');
+            setError(err.message || 'Falha ao criar reserva');
             throw err;
         } finally {
             setLoading(false);
         }
     };
 
-    const updateRoom = (updatedRoom: Room) => {
+    const updateRoom = async (updatedRoom: Room) => {
+        // 1. Atualiza estado local (para refletir na UI imediatamente)
         const newRooms = rooms.map(r => r.id === updatedRoom.id ? updatedRoom : r);
         setRooms(newRooms);
+
+        // 2. Salva a quantidade no Supabase (Inventário Real)
+        try {
+            const { error } = await supabase
+                .from('rooms')
+                .upsert({ 
+                    id: updatedRoom.id, 
+                    quantity: updatedRoom.quantity,
+                    name: updatedRoom.name // Mantém o nome sincronizado
+                });
+            
+            if (error) {
+                console.error("Erro ao salvar inventário no Supabase:", error);
+                // Não revertemos o estado local para não travar a UI, mas logamos o erro
+            }
+        } catch (err) {
+            console.error("Erro de conexão ao atualizar quarto:", err);
+        }
     };
 
     const updateActivity = (updatedActivity: Activity) => {
@@ -243,7 +302,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setActivities(newActivities);
     };
 
-    const updateBookingStatus = async (bookingId: string, newStatus: string) => {
+    const updateBookingStatus = async (bookingId: string, newStatus: Booking['status']) => {
         setLoading(true);
         setError(null);
         try {
@@ -261,10 +320,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         : booking
                 )
             );
-        } catch (err) {
+        } catch (err: any) {
             console.error('Erro ao atualizar status:', err);
+            alert(`Erro ao atualizar status: ${err.message || 'Erro de permissão ou conexão'}. Verifique as Políticas RLS no Supabase.`);
             setError('Falha ao atualizar status da reserva');
-            throw err;
         } finally {
             setLoading(false);
         }
@@ -292,20 +351,61 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    // Função atualizada para suportar envio pelo Admin
     const sendChatMessage = async (text: string, isAdmin: boolean = false, targetSessionId?: string) => {
         try {
             const sessionToUse = targetSessionId || chatSessionId;
             const senderToUse = isAdmin ? 'admin' : 'user';
 
-            await supabase.from('live_chat').insert([{
+            const { data, error } = await supabase.from('live_chat').insert([{
                 session_id: sessionToUse,
                 sender: senderToUse,
                 message: text
-            }]);
+            }]).select();
+
+            if (error) throw error;
+            
+            const sentMsg = data?.[0] as ChatMessage;
+
+            if (!isAdmin && sentMsg) {
+                setChatMessages(prev => {
+                     if (prev.find(m => m.id === sentMsg.id)) return prev;
+                     return [...prev, sentMsg];
+                });
+            }
+
+            return sentMsg;
         } catch (err) {
             console.error('Erro ao enviar chat:', err);
+            return null;
         }
+    };
+
+    // LÓGICA DE DISPONIBILIDADE (Inventário Real)
+    const getAvailableQuantity = (roomId: string, checkIn: string, checkOut: string): number => {
+        if (!checkIn || !checkOut) return -1;
+
+        const targetRoom = rooms.find(r => r.id === roomId);
+        if (!targetRoom) return 0;
+
+        const requestStart = new Date(checkIn);
+        const requestEnd = new Date(checkOut);
+        
+        if (requestStart >= requestEnd) return 0;
+
+        const overlappingBookings = bookings.filter(b => {
+            if (b.roomId !== roomId) return false;
+            if (b.status === 'cancelled') return false; 
+
+            const bookingStart = new Date(b.checkIn);
+            const bookingEnd = new Date(b.checkOut);
+
+            return (requestStart < bookingEnd) && (requestEnd > bookingStart);
+        });
+
+        const totalInventory = targetRoom.quantity || 0;
+        const available = totalInventory - overlappingBookings.length;
+
+        return Math.max(0, available);
     };
 
     return (
@@ -323,7 +423,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             updateBookingStatus,
             sendMessage,
             fetchMessages,
-            sendChatMessage
+            sendChatMessage,
+            getAvailableQuantity,
+            refreshBookings: fetchBookings
         }}>
             {children}
         </DataContext.Provider>
@@ -335,4 +437,5 @@ export const useData = () => {
     if (context === undefined) {
         throw new Error('useData must be used within a DataProvider');
     }
-    return context;}
+    return context;
+};

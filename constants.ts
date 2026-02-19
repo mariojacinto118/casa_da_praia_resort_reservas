@@ -11,10 +11,16 @@ export const RESORT_INFO = {
   poolHours: "09:00 - 18:00",
 };
 
+// --- LISTA DE ADMINISTRADORES ---
+// Adicione aqui os emails que devem ter acesso ao painel.
+// Separe por vírgulas e use aspas.
+export const ADMIN_EMAILS = [
+  'marioantoniojacinto02@gmail.com',
+  // 'sócio@casadapraia.ao', 
+  // 'gerente@gmail.com'
+];
+
 // Imagens configuradas para o bucket 'resort_assets'
-// Estrutura de pastas sugerida no Supabase:
-// - suites/
-// - activities/
 export const INITIAL_ROOMS: Room[] = [
   {
     id: 'std',
@@ -25,6 +31,7 @@ export const INITIAL_ROOMS: Room[] = [
     features: ['Wi-Fi', 'Ar Condicionado', 'TV Cabo', 'Frigobar'],
     image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/IMG_5799%20(1).jpg",
     available: true,
+    quantity: 5,
   },
   {
     id: 'dlx',
@@ -35,6 +42,7 @@ export const INITIAL_ROOMS: Room[] = [
     features: ['Vista Mar', 'King Size Bed', 'Room Service', 'Varanda'],
     image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/deluxe.jpg",
     available: true,
+    quantity: 6,
   },
   {
     id: 'dlxp',
@@ -45,6 +53,7 @@ export const INITIAL_ROOMS: Room[] = [
     features: ['Varanda Privada', 'Banheira', 'Amenities Premium', 'Vista Panorâmica'],
     image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/piscina.jpg",
     available: true,
+    quantity: 7,
   },
   {
     id: 'chalet',
@@ -55,6 +64,7 @@ export const INITIAL_ROOMS: Room[] = [
     features: ['Piscina Privada', 'Área Externa', 'Cozinha Compacta', 'Rede de Descanso'],
     image: getStorageUrl('suites/chalet.jpg'),
     available: true,
+    quantity: 5,
   },
   {
     id: 'master',
@@ -65,6 +75,7 @@ export const INITIAL_ROOMS: Room[] = [
     features: ['Jango Privativo', 'Vista Panorâmica', 'Decoração Exclusiva', 'Jacuzzi'],
     image: getStorageUrl('suites/master.jpg'),
     available: true,
+    quantity: 3,
   },
   {
     id: 'duplex',
@@ -75,6 +86,7 @@ export const INITIAL_ROOMS: Room[] = [
     features: ['Dois Andares', 'Sala de Estar', 'Múltiplos Banheiros', 'Varanda Dupla'],
     image: getStorageUrl('suites/duplex.jpg'),
     available: true,
+    quantity: 4,
   },
   {
     id: 'duplex_prem',
@@ -85,6 +97,7 @@ export const INITIAL_ROOMS: Room[] = [
     features: ['Jango Exclusivo', 'Área VIP', 'Serviço de Mordomo', 'Acesso Direto à Praia'],
     image: getStorageUrl('suites/duplex-premium.jpg'),
     available: true,
+    quantity: 4,
   },
 ];
 
