@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Star, Wind, Waves, Utensils } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useData } from '../context/DataContext';
-import { RoomCard } from '../components/RoomCard';
+import RoomCard from '../components/RoomCard';
 import { getStorageUrl } from '../supabase';
 
 const Home: React.FC = () => {
@@ -44,6 +44,7 @@ const Home: React.FC = () => {
             <img
               src={img}
               alt={`Casa da Praia Resort View ${index + 1}`}
+              referrerPolicy="no-referrer"
               className="w-full h-full object-cover transform scale-105 animate-ken-burns" // Pequeno zoom effect
             />
           </div>
@@ -232,5 +233,3 @@ const Home: React.FC = () => {
     </div>
   );
 };
-
-export default Home;

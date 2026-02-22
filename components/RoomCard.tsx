@@ -15,7 +15,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
         <img 
           src={room.image} 
           alt={room.name} 
-          loading="lazy"
+          referrerPolicy="no-referrer"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.onerror = null; // Prevent infinite loop
@@ -62,3 +62,5 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
     </div>
   );
 };
+
+export default RoomCard;
