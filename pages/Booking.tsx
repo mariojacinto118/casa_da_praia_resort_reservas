@@ -221,41 +221,6 @@ const Booking: React.FC = () => {
         
         await addBooking(newBooking);
 
-        // Notificação Nativa
-        try {
-            if ('Notification' in window && Notification.permission === 'granted') {
-                // Tenta usar ServiceWorker se disponível (melhor para Android)
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.ready.then(registration => {
-                        registration.showNotification("Reserva Recebida! 🏨", {
-                            body: `Olá ${formData.name}, recebemos seu pedido de reserva para ${formData.checkIn}. Por favor, anexe o comprovativo na página de perfil.`,
-                            icon: '/vite.svg',
-                            vibrate: [200, 100, 200]
-                        } as any);
-                    }).catch(() => {
-                        // Fallback para construtor padrão se SW falhar ou não estiver pronto
-                        try {
-                            new Notification("Reserva Recebida! 🏨", {
-                                body: `Olá ${formData.name}, recebemos seu pedido de reserva para ${formData.checkIn}. Por favor, anexe o comprovativo na página de perfil.`,
-                                icon: '/vite.svg',
-                                vibrate: [200, 100, 200]
-                            } as any);
-                        } catch (e) {
-                            console.warn("Fallback notification failed:", e);
-                        }
-                    });
-                } else {
-                    new Notification("Reserva Recebida! 🏨", {
-                        body: `Olá ${formData.name}, recebemos seu pedido de reserva para ${formData.checkIn}. Por favor, anexe o comprovativo na página de perfil.`,
-                        icon: '/vite.svg',
-                        vibrate: [200, 100, 200]
-                    } as any);
-                }
-            }
-        } catch (e) {
-            console.warn("Notificação não suportada ou falhou:", e);
-        }
-        
         // Redireciona para o perfil com mensagem de sucesso
         navigate('/profile?new=true');
 
