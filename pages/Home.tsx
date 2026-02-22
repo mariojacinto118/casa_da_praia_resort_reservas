@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Star, Wind, Waves, Utensils } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useData } from '../context/DataContext';
-import RoomCard from '../components/RoomCard';
+import { RoomCard } from '../components/RoomCard';
 import { getStorageUrl } from '../supabase';
 
 const Home: React.FC = () => {
