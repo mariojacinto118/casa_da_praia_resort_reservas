@@ -444,7 +444,16 @@ const Booking: React.FC = () => {
 
                             {/* Conteúdo do Card */}
                             <div className="flex items-center space-x-4">
-                               <img src={room.image} alt={room.name} className="w-16 h-16 object-cover rounded" />
+                               <img 
+                                 src={room.image} 
+                                 alt={room.name} 
+                                 className="w-16 h-16 object-cover rounded"
+                                 onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.onerror = null;
+                                    target.src = 'https://picsum.photos/200/200?grayscale&blur=2';
+                                 }}
+                               />
                                <div>
                                  <h3 className="font-bold text-gray-900 flex items-center gap-2">
                                      {room.name}

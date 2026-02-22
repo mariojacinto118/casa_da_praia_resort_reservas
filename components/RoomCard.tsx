@@ -15,6 +15,13 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
         <img 
           src={room.image} 
           alt={room.name} 
+          loading="lazy"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null; // Prevent infinite loop
+            target.src = 'https://picsum.photos/800/600?grayscale&blur=2'; // Fallback image
+            console.warn(`Failed to load image for room: ${room.name} (${room.image})`);
+          }}
           className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
         />
         <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-500"></div>
@@ -55,5 +62,3 @@ const RoomCard: React.FC<RoomCardProps> = ({ room }) => {
     </div>
   );
 };
-
-export default RoomCard;
