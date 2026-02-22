@@ -10,14 +10,14 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/vite.svg",
+      "src": "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/receipts/Imagens%20Galeria/icone%20b%20cp.png",
       "sizes": "192x192",
-      "type": "image/svg+xml"
+      "type": "image/png"
     },
     {
-      "src": "/vite.svg",
+      "src": "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/receipts/Imagens%20Galeria/icone%20b%20cp.png",
       "sizes": "512x512",
-      "type": "image/svg+xml"
+      "type": "image/png"
     }
   ]
 }
