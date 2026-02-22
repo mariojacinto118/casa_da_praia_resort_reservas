@@ -10,13 +10,13 @@ const Footer: React.FC = () => {
   const isAdmin = user && user.email && ADMIN_EMAILS.includes(user.email);
 
   return (
-    <footer className="bg-primary text-white pt-24 pb-12 border-t border-white/10">
+    <footer className="bg-primary text-white pt-24 pb-12 border-t border-white/10 w-full overflow-hidden">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
         <div className="flex flex-col md:flex-row justify-between items-start mb-20">
             {/* Brand - Big */}
             <div className="mb-12 md:mb-0">
-                <h3 className="font-serif text-5xl md:text-7xl font-light tracking-tight mb-6">CASA DA PRAIA</h3>
-                <p className="text-white/60 font-light max-w-md text-lg">
+                <h3 className="font-serif text-4xl md:text-7xl font-light tracking-tight mb-6">CASA DA PRAIA</h3>
+                <p className="text-white/60 font-light max-w-md text-base md:text-lg">
                     Luxo silencioso na Praia dos Ramiros. <br/>
                     O seu refúgio particular em Angola.
                 </p>
@@ -24,7 +24,7 @@ const Footer: React.FC = () => {
             
             {/* Newsletter or Action */}
             <div className="flex flex-col items-start">
-                 <Link to="/booking" className="group flex items-center text-2xl font-serif hover:text-secondary transition-colors">
+                 <Link to="/booking" className="group flex items-center text-xl md:text-2xl font-serif hover:text-secondary transition-colors">
                     <span>Reserve sua estadia</span>
                     <ArrowUpRight className="ml-2 w-6 h-6 group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform" />
                  </Link>
@@ -95,7 +95,7 @@ const Footer: React.FC = () => {
 
         <div className="mt-20 flex flex-col md:flex-row justify-between items-center text-white/30 text-xs font-light tracking-wider">
           <p>&copy; {new Date().getFullYear()} Casa da Praia Resort.</p>
-          <p className="mt-2 md:mt-0">Designed for Excellence.</p>
+          <p className="mt-2 md:mt-0">Criado por Mário Jacinto.</p>
         </div>
       </div>
     </footer>

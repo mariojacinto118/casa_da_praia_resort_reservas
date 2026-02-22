@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { Booking } from '../types';
-import { Eye, X, ExternalLink, FileText } from 'lucide-react';
+import { Eye, X, ExternalLink, FileText, Download } from 'lucide-react';
 import { ADMIN_EMAILS } from '../constants';
 
 const AdminBookings = () => {
@@ -70,6 +70,24 @@ const AdminBookings = () => {
         }
     };
 
+    const handleDownload = async (url: string, filename: string) => {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            console.error('Download failed:', error);
+            window.open(url, '_blank');
+        }
+    };
+
     if (loading) {
         return <div className="text-center p-8 pt-24">Carregando...</div>;
     }
@@ -118,6 +136,17 @@ const AdminBookings = () => {
                                 <p className="text-sm text-gray-600">{booking.phone}</p>
                                 {booking.receiptUrl && (
                                      <div className="mt-2 relative group w-24 h-24">
+                                         <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                const ext = booking.receiptUrl!.split('.').pop()?.split('?')[0] || 'jpg';
+                                                handleDownload(booking.receiptUrl!, `comprovativo-${booking.id}.${ext}`);
+                                            }}
+                                            className="absolute -top-2 -right-2 bg-white text-gray-700 p-1 rounded-full shadow-md hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                            title="Baixar Comprovativo"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                        </button>
                                          {booking.receiptUrl.toLowerCase().includes('.pdf') ? (
                                             <div 
                                                 onClick={() => handleViewReceipt(booking.receiptUrl!)}

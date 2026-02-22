@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -15,7 +16,7 @@ const Home: React.FC = () => {
 
   // Lista de imagens para o Slider do Hero
   const heroImages = [
-    "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/site/IMG_5914%20(1).jpg"
+    "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/imagem-do-fundo.jpg"
   ];
 
   // Rotação automática do slider
@@ -28,7 +29,7 @@ const Home: React.FC = () => {
   }, [heroImages.length]);
 
   return (
-    <div className="min-h-screen bg-light">
+    <div className="min-h-screen bg-light w-full overflow-x-hidden">
       {/* Hero Section - Slider Style */}
       <section className="relative h-screen w-full overflow-hidden">
         
@@ -52,26 +53,26 @@ const Home: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 z-10"></div>
         
         {/* Hero Content */}
-        <div className="relative z-20 h-full flex flex-col justify-center items-center text-center px-6">
+        <div className="relative z-20 h-full flex flex-col justify-center items-center text-center px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, ease: "easeOut" }}
-            className="max-w-5xl"
+            className="max-w-5xl w-full"
           >
-            <p className="text-secondary font-sans text-xs md:text-sm tracking-[0.4em] uppercase mb-6 drop-shadow-md">
+            <p className="text-secondary font-sans text-[10px] md:text-sm tracking-[0.3em] md:tracking-[0.4em] uppercase mb-4 md:mb-6 drop-shadow-md">
               Praia dos Ramiros, Luanda
             </p>
-            <h1 className="font-serif text-6xl md:text-8xl lg:text-9xl text-white mb-8 leading-none tracking-tight drop-shadow-lg">
+            <h1 className="font-serif text-4xl md:text-8xl lg:text-9xl text-white mb-6 md:mb-8 leading-none tracking-tight drop-shadow-lg break-words">
               {t('heroTitle')}
             </h1>
-            <p className="font-sans font-light text-white/90 text-lg md:text-xl max-w-xl mx-auto mb-12 leading-relaxed drop-shadow-md">
+            <p className="font-sans font-light text-white/90 text-sm md:text-xl max-w-xl mx-auto mb-10 md:mb-12 leading-relaxed drop-shadow-md px-4">
               {t('heroSubtitle')}
             </p>
             
             <Link
               to="/booking"
-              className="group inline-flex items-center space-x-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white px-10 py-4 hover:bg-white hover:text-primary transition-all duration-500 uppercase text-sm tracking-[0.25em]"
+              className="group inline-flex items-center space-x-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white px-8 py-4 md:px-10 hover:bg-white hover:text-primary transition-all duration-500 uppercase text-xs md:text-sm tracking-[0.25em]"
             >
               <span>{t('bookNow')}</span>
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -100,13 +101,13 @@ const Home: React.FC = () => {
       </section>
 
       {/* Introduction / Philosophy */}
-      <section className="py-32 px-6 bg-light">
+      <section className="py-20 md:py-32 px-6 bg-light">
         <div className="max-w-4xl mx-auto text-center">
            <span className="text-secondary text-xs font-bold tracking-[0.3em] uppercase mb-4 block">Nossa Filosofia</span>
-           <h2 className="font-serif text-4xl md:text-5xl text-primary mb-8 leading-tight">
+           <h2 className="font-serif text-3xl md:text-5xl text-primary mb-8 leading-tight">
              "Onde o tempo desacelera e a natureza dita o ritmo."
            </h2>
-           <p className="text-gray-500 font-light text-lg leading-loose mx-auto max-w-2xl">
+           <p className="text-gray-500 font-light text-base md:text-lg leading-loose mx-auto max-w-2xl">
              Situado nas margens serenas da Praia dos Ramiros, o Casa da Praia não é apenas um resort, é um santuário. 
              Combinamos a arquitetura moderna com materiais naturais para criar uma atmosfera de luxo despretensioso.
            </p>
@@ -117,29 +118,29 @@ const Home: React.FC = () => {
       </section>
 
       {/* Experiences Grid */}
-      <section className="py-24 bg-white">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+      <section className="py-16 md:py-24 bg-white">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-6 lg:px-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-gray-100 border border-gray-100">
             {/* Item 1 */}
-            <div className="bg-white p-16 text-center group hover:bg-primary hover:text-white transition-colors duration-500">
+            <div className="bg-white p-8 md:p-16 text-center group hover:bg-primary hover:text-white transition-colors duration-500">
               <Wind className="w-8 h-8 mx-auto mb-6 text-secondary" strokeWidth={1} />
-              <h3 className="font-serif text-2xl mb-4">Bem-estar & Spa</h3>
+              <h3 className="font-serif text-xl md:text-2xl mb-4">Bem-estar & Spa</h3>
               <p className="font-light text-sm text-gray-500 group-hover:text-white/80 leading-relaxed">
                 Massagens relaxantes com vista para o mar e tratamentos exclusivos.
               </p>
             </div>
             {/* Item 2 */}
-            <div className="bg-white p-16 text-center group hover:bg-primary hover:text-white transition-colors duration-500">
+            <div className="bg-white p-8 md:p-16 text-center group hover:bg-primary hover:text-white transition-colors duration-500">
               <Waves className="w-8 h-8 mx-auto mb-6 text-secondary" strokeWidth={1} />
-              <h3 className="font-serif text-2xl mb-4">Praia Privativa</h3>
+              <h3 className="font-serif text-xl md:text-2xl mb-4">Praia Privativa</h3>
               <p className="font-light text-sm text-gray-500 group-hover:text-white/80 leading-relaxed">
                 Acesso direto a quilômetros de areia dourada e águas mornas.
               </p>
             </div>
             {/* Item 3 */}
-            <div className="bg-white p-16 text-center group hover:bg-primary hover:text-white transition-colors duration-500">
+            <div className="bg-white p-8 md:p-16 text-center group hover:bg-primary hover:text-white transition-colors duration-500">
               <Utensils className="w-8 h-8 mx-auto mb-6 text-secondary" strokeWidth={1} />
-              <h3 className="font-serif text-2xl mb-4">Alta Gastronomia</h3>
+              <h3 className="font-serif text-xl md:text-2xl mb-4">Alta Gastronomia</h3>
               <p className="font-light text-sm text-gray-500 group-hover:text-white/80 leading-relaxed">
                 Uma fusão de sabores locais e técnicas internacionais.
               </p>
@@ -149,12 +150,12 @@ const Home: React.FC = () => {
       </section>
 
       {/* Featured Rooms with refined Layout */}
-      <section className="py-32 bg-light">
+      <section className="py-20 md:py-32 bg-light">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-16">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-12 md:mb-16">
             <div className="max-w-xl">
               <span className="text-secondary text-xs font-bold tracking-[0.3em] uppercase mb-4 block">Acomodações</span>
-              <h2 className="font-serif text-4xl md:text-5xl text-primary leading-tight">
+              <h2 className="font-serif text-3xl md:text-5xl text-primary leading-tight">
                 Suítes & Chalés Exclusivos
               </h2>
             </div>
@@ -171,7 +172,7 @@ const Home: React.FC = () => {
           </div>
           
           <div className="mt-12 text-center md:hidden">
-            <Link to="/accommodations" className="inline-block border border-primary text-primary px-8 py-3 text-xs uppercase tracking-widest">
+            <Link to="/accommodations" className="inline-block border border-primary text-primary px-8 py-3 text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors">
               Ver Todas
             </Link>
           </div>
@@ -179,7 +180,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Image Strip / Atmosphere - Now using Supabase URLs */}
-      <section className="grid grid-cols-2 md:grid-cols-4 h-64 md:h-96 w-full">
+      <section className="grid grid-cols-2 md:grid-cols-4 h-48 md:h-96 w-full">
          <div className="relative group overflow-hidden">
             <img 
                 src={getStorageUrl('site/mood-1.jpg')} 
@@ -215,12 +216,12 @@ const Home: React.FC = () => {
       </section>
 
       {/* Testimonial - Minimal */}
-      <section className="py-32 bg-primary text-white text-center px-6">
+      <section className="py-20 md:py-32 bg-primary text-white text-center px-6">
         <div className="max-w-3xl mx-auto">
           <div className="flex justify-center mb-8">
              {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 text-secondary mx-1" fill="#C5A059" />)}
           </div>
-          <h2 className="font-serif text-3xl md:text-5xl italic leading-tight mb-10 opacity-90">
+          <h2 className="font-serif text-2xl md:text-5xl italic leading-tight mb-8 md:mb-10 opacity-90">
             "Uma experiência transcendente. O silêncio, o serviço e a beleza natural criam uma harmonia perfeita."
           </h2>
           <div className="uppercase text-xs tracking-[0.3em] text-secondary">
