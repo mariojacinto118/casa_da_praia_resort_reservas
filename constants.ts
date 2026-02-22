@@ -29,7 +29,7 @@ export const INITIAL_ROOMS: Room[] = [
     description: 'Conforto e elegância para casais ou viajantes individuais. Quarto acolhedor com acabamentos de luxo.',
     capacity: 2,
     features: ['Wi-Fi', 'Ar Condicionado', 'TV Cabo', 'Frigobar'],
-    image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/standrd.jpg",
+    image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/Standars.jpg",
     available: true,
     quantity: 5,
   },
