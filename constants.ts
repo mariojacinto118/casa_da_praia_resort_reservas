@@ -29,7 +29,7 @@ export const INITIAL_ROOMS: Room[] = [
     description: 'Conforto e elegância para casais ou viajantes individuais. Quarto acolhedor com acabamentos de luxo.',
     capacity: 2,
     features: ['Wi-Fi', 'Ar Condicionado', 'TV Cabo', 'Frigobar'],
-    image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/Standars.jpg",
+    image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/Standars%20(1).jpg",
     available: true,
     quantity: 5,
   },
@@ -55,14 +55,14 @@ export const INITIAL_ROOMS: Room[] = [
     available: true,
     quantity: 7,
   },
-  {
+ {
     id: 'chalet',
     name: 'Chalé com Piscina',
     price: 195000,
     description: 'Privacidade total com sua própria piscina particular. Ideal para momentos românticos.',
     capacity: 4,
     features: ['Piscina Privada', 'Área Externa', 'Cozinha Compacta', 'Rede de Descanso'],
-    image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/piscina-privativa.jpg",
+    image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/Chaleprivativa.jpg",
     available: true,
     quantity: 5,
   },
@@ -102,14 +102,14 @@ export const INITIAL_ROOMS: Room[] = [
 ];
 
 export const INITIAL_ACTIVITIES: Activity[] = [
-  { id: 'pool_adult', name: 'Piscina (Adulto +10)', price: 10000, image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/piscina.jpg?v=2", description: 'Refresque-se em nossa piscina infinita.' },
-  { id: 'pool_child', name: 'Piscina (2-9 anos)', price: 7000, image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/piscina.jpg?v=2", description: 'Área segura e divertida para os pequenos.' },
-  { id: 'horse', name: 'Passeio à Cavalo', price: 10000, image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/passeio-a-cavalo.jpg?v=2", description: 'Passeio relaxante pela orla da praia.' },
+  { id: 'pool_adult', name: 'Piscina (Adulto +10)', price: 10000, image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/piscina.jpg", description: 'Refresque-se em nossa piscina infinita.' },
+  { id: 'pool_child', name: 'Piscina (2-9 anos)', price: 7000, image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/piscina.jpg", description: 'Área segura e divertida para os pequenos.' },
+  { id: 'horse', name: 'Passeio à Cavalo', price: 10000, image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/passeio-a-cavalo.jpg", description: 'Passeio relaxante pela orla da praia.' },
   { id: 'boat', name: 'Passeio de Barco', price: 15000, image: getStorageUrl('activities/boat.jpg'), description: 'Explore a costa e aprecie a vista do mar.' },
-  { id: 'lounge', name: 'Espreguiçadeira', price: 5000, image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/Espreg.jpg?v=2", description: 'Conforto para tomar sol.' },
-  { id: 'towel', name: 'Toalha', price: 3000, image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/toalha.jpg?v=2", description: 'Aluguel de toalha de praia.' },
+  { id: 'lounge', name: 'Espreguiçadeira', price: 5000, image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/Espreg.jpg", description: 'Conforto para tomar sol.' },
+  { id: 'towel', name: 'Toalha', price: 3000, image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/toalha.jpg", description: 'Aluguel de toalha de praia.' },
   { id: 'snooker', name: 'Snooker (1h)', price: 5000, image: getStorageUrl('activities/snooker.jpg'), description: 'Divirta-se com amigos no nosso salão de jogos.' },
-  { id: 'playground', name: 'Parque Infantil', price: 0, image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/parque-infantil.jpg?v=2", description: 'Diversão garantida para as crianças (Gratuito).' },
+  { id: 'playground', name: 'Parque Infantil', price: 0, image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/parque-infantil.jpg", description: 'Diversão garantida para as crianças (Gratuito).' },
 ];
 
 export const EXTRA_MATTRESS = {
