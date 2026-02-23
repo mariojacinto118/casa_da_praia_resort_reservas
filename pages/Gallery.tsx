@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import SmartImage from '@/components/SmartImageComp';
+import SmartImage from '../components/SmartImageComp';
 
 const GALLERY_IMAGES = [
   "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/receipts/Imagens%20Galeria/galeria-02.jpg",
@@ -47,4 +47,5 @@ const Gallery: React.FC = () => {
 };
 
 export default Gallery;
+
 
