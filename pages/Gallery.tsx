@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import SmartImage from '@/components/SmartImageComp';
 
 const GALLERY_IMAGES = [
   "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/receipts/Imagens%20Galeria/galeria-02.jpg",
@@ -32,14 +33,10 @@ const Gallery: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {images.map((src, idx) => (
             <div key={idx} className="aspect-w-4 aspect-h-3 overflow-hidden rounded-lg shadow-md group bg-gray-100">
-            <img 
+            <SmartImage 
                 src={src} 
                 alt={`Gallery ${idx}`} 
                 className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110"
-                onError={(e) => {
-                    // Fallback visual caso a imagem não carregue
-                    (e.target as HTMLImageElement).src = 'https://picsum.photos/800/600?grayscale';
-                }} 
             />
             </div>
         ))}
@@ -50,3 +47,4 @@ const Gallery: React.FC = () => {
 };
 
 export default Gallery;
+

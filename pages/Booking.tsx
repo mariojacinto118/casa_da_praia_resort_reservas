@@ -7,7 +7,7 @@ import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { CheckCircle, Lock, Calendar as CalendarIcon, CreditCard, Copy, AlertCircle, ArrowRight, AlertTriangle, ChevronLeft, ChevronRight, Upload } from 'lucide-react';
 import { Booking as BookingType } from '../types';
-import SmartImage from '../components/SmartImage';
+import SmartImage from '@/components/SmartImageComp';
 
 const BANK_ACCOUNTS = [
     { bank: "BFA", iban: "AO06.0006.0000.0127.2474.3013.6" },
