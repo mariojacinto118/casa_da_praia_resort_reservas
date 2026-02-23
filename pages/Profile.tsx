@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, User, Calendar, MessageCircle, Upload, FileText, Check, Loader2, Paperclip, Eye, X, ExternalLink } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { supabase, getStorageUrl } from '../supabase';
+import SmartImage from '../components/SmartImageComp';
 
 const Profile: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -135,7 +136,7 @@ const Profile: React.FC = () => {
                              <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                                  {/* Imagem e Info */}
                                  <div className="flex items-start space-x-4">
-                                     <img src={room?.image} alt={room?.name} className="w-20 h-20 object-cover rounded hidden sm:block" />
+                                     <SmartImage src={room?.image} alt={room?.name} className="w-20 h-20 object-cover rounded hidden sm:block" />
                                      <div>
                                          <h3 className="font-bold text-primary text-lg">{room?.name || 'Acomodação'}</h3>
                                          <div className="text-sm text-gray-500 space-y-1 mt-1">

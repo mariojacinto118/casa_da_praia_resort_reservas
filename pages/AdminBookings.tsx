@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { Booking } from '../types';
 import { Eye, X, ExternalLink, FileText, Download } from 'lucide-react';
 import { ADMIN_EMAILS } from '../constants';
+import SmartImage from '../components/SmartImageComp';
 
 const AdminBookings = () => {
     const { bookings, updateBookingStatus, loading } = useData();
@@ -156,7 +157,7 @@ const AdminBookings = () => {
                                                 <span className="text-xs font-bold text-red-600 mt-1">PDF</span>
                                             </div>
                                          ) : (
-                                            <img 
+                                            <SmartImage 
                                                 src={booking.receiptUrl} 
                                                 alt="Comprovativo" 
                                                 onClick={() => handleViewReceipt(booking.receiptUrl!)}

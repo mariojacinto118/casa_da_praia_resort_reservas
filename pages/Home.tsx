@@ -7,6 +7,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useData } from '../context/DataContext';
 import RoomCard from '../components/RoomCard';
 import { getStorageUrl } from '../supabase';
+import SmartImage from '../components/SmartImageComp';
 
 const Home: React.FC = () => {
   const { t } = useLanguage();
@@ -183,33 +184,33 @@ const Home: React.FC = () => {
       {/* Image Strip / Atmosphere - Now using Supabase URLs */}
       <section className="grid grid-cols-2 md:grid-cols-4 h-48 md:h-96 w-full">
          <div className="relative group overflow-hidden">
-            <img 
+            <SmartImage 
                 src={getStorageUrl('site/mood-1.jpg')} 
-                onError={(e) => (e.target as HTMLImageElement).src = "https://picsum.photos/id/10/800/800"}
+                fallbackSrc="https://picsum.photos/id/10/800/800"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                 alt="Mood 1"
             />
          </div>
          <div className="relative group overflow-hidden">
-            <img 
+            <SmartImage 
                 src={getStorageUrl('site/mood-2.jpg')} 
-                onError={(e) => (e.target as HTMLImageElement).src = "https://picsum.photos/id/11/800/800"}
+                fallbackSrc="https://picsum.photos/id/11/800/800"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                 alt="Mood 2"
             />
          </div>
          <div className="relative group overflow-hidden">
-            <img 
+            <SmartImage 
                 src={getStorageUrl('site/mood-3.jpg')} 
-                onError={(e) => (e.target as HTMLImageElement).src = "https://picsum.photos/id/12/800/800"}
+                fallbackSrc="https://picsum.photos/id/12/800/800"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                 alt="Mood 3"
             />
          </div>
          <div className="relative group overflow-hidden">
-            <img 
+            <SmartImage 
                 src={getStorageUrl('site/mood-4.jpg')} 
-                onError={(e) => (e.target as HTMLImageElement).src = "https://picsum.photos/id/13/800/800"}
+                fallbackSrc="https://picsum.photos/id/13/800/800"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                 alt="Mood 4"
             />

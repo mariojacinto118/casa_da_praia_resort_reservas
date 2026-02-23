@@ -1,5 +1,6 @@
 import React from 'react';
 import { useData } from '../context/DataContext';
+import SmartImage from '../components/SmartImageComp';
 
 const Attractions: React.FC = () => {
   const { activities } = useData();
@@ -16,7 +17,7 @@ const Attractions: React.FC = () => {
           {activities.map((activity) => (
             <div key={activity.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300">
                <div className="h-64 overflow-hidden">
-                 <img 
+                 <SmartImage 
                    src={activity.image || 'https://picsum.photos/400/300'} 
                    alt={activity.name} 
                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
