@@ -6,7 +6,7 @@ import { DataProvider, useData } from './context/DataContext';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import Home from './pages/Home';
+import { Home } from './pages/Home';
 import About from './pages/About';
 import Accommodations from './pages/Accommodations';
 import Attractions from './pages/Attractions';
