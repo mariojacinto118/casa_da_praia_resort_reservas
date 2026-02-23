@@ -7,12 +7,15 @@ import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { CheckCircle, Lock, Calendar as CalendarIcon, CreditCard, Copy, AlertCircle, ArrowRight, AlertTriangle, ChevronLeft, ChevronRight, Upload } from 'lucide-react';
 import { Booking as BookingType } from '../types';
+import SmartImage from '../components/SmartImage';
 
-const BANK_DETAILS = {
-    bank: "Banco BAI",
-    iban: "AO06 0040 0000 1234 5678 9012 3",
-    beneficiary: "Casa da Praia Resort Lda"
-};
+const BANK_ACCOUNTS = [
+    { bank: "BFA", iban: "AO06.0006.0000.0127.2474.3013.6" },
+    { bank: "BAI", iban: "AO06.0040.0000.3072.5958.1013.8" },
+    { bank: "SOL", iban: "AO06.0044.0000.0004.0385.1010.3" }
+];
+
+const BENEFICIARY = "NDALA KYOZA - Empreendimentos, Lda";
 
 const Booking: React.FC = () => {
   const { t } = useLanguage();
@@ -39,7 +42,7 @@ const Booking: React.FC = () => {
   });
   
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedIban, setCopiedIban] = useState<string | null>(null);
 
   // Calendar State
   const [viewDate, setViewDate] = useState(new Date());
@@ -106,10 +109,10 @@ const Booking: React.FC = () => {
     });
   };
 
-  const copyToClipboard = () => {
-      navigator.clipboard.writeText(BANK_DETAILS.iban);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  const copyToClipboard = (iban: string) => {
+      navigator.clipboard.writeText(iban);
+      setCopiedIban(iban);
+      setTimeout(() => setCopiedIban(null), 2000);
   };
 
   // --- CALENDAR LOGIC START ---
@@ -444,15 +447,10 @@ const Booking: React.FC = () => {
 
                             {/* Conteúdo do Card */}
                             <div className="flex items-center space-x-4">
-                               <img 
+                               <SmartImage 
                                  src={room.image} 
                                  alt={room.name} 
                                  className="w-16 h-16 object-cover rounded"
-                                 onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.onerror = null;
-                                    target.src = 'https://picsum.photos/200/200?grayscale&blur=2';
-                                 }}
                                />
                                <div>
                                  <h3 className="font-bold text-gray-900 flex items-center gap-2">
@@ -615,19 +613,26 @@ const Booking: React.FC = () => {
                         </p>
 
                         <div className="bg-white p-4 rounded border border-gray-200 mb-6">
-                            <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Banco / Beneficiário</p>
-                            <p className="font-bold text-gray-800 mb-4">{BANK_DETAILS.bank} - {BANK_DETAILS.beneficiary}</p>
+                            <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Beneficiário</p>
+                            <p className="font-bold text-gray-800 mb-4">{BENEFICIARY}</p>
                             
-                            <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">IBAN</p>
-                            <div className="flex items-center space-x-3">
-                                <span className="font-mono text-lg md:text-xl tracking-wider text-primary font-bold break-all">{BANK_DETAILS.iban}</span>
-                                <button 
-                                type="button"
-                                onClick={copyToClipboard}
-                                className="text-gray-400 hover:text-primary transition-colors flex-shrink-0"
-                                >
-                                    {copied ? <CheckCircle className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
-                                </button>
+                            <div className="space-y-4">
+                                {BANK_ACCOUNTS.map((account, index) => (
+                                    <div key={index} className="border-b border-gray-100 last:border-0 pb-3 last:pb-0">
+                                        <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">{account.bank}</p>
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-mono text-sm md:text-base tracking-wider text-primary font-bold break-all">{account.iban}</span>
+                                            <button 
+                                                type="button"
+                                                onClick={() => copyToClipboard(account.iban)}
+                                                className="text-gray-400 hover:text-primary transition-colors flex-shrink-0 ml-2"
+                                                title="Copiar IBAN"
+                                            >
+                                                {copiedIban === account.iban ? <CheckCircle className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
 
