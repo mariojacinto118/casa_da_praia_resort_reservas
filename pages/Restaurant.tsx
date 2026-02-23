@@ -73,16 +73,16 @@ const Restaurant: React.FC = () => {
   };
 
   return (
-    <div className="pt-20 min-h-screen bg-stone-50">
+    <div className="pt-20 min-h-screen bg-stone-50 w-full overflow-x-hidden">
        {/* Hero */}
       <div className="relative h-[70vh] w-full overflow-hidden">
         <img src="https://picsum.photos/id/431/1920/1200" alt="Restaurant" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black/40"></div>
         <div className="absolute inset-0 flex items-center justify-center">
-           <div className="text-center text-white px-4 border-2 border-white/20 p-12 backdrop-blur-sm animate-fade-in">
-              <span className="block text-xs font-bold tracking-[0.4em] uppercase mb-4 text-secondary">Gastronomia</span>
-              <h1 className="font-serif text-5xl md:text-7xl mb-4">Sabores da Terra</h1>
-              <p className="font-light text-lg tracking-wide opacity-90 mb-8">Uma viagem culinária à beira-mar</p>
+           <div className="text-center text-white px-4 border-2 border-white/20 p-8 md:p-12 backdrop-blur-sm animate-fade-in w-[90%] md:w-auto">
+              <span className="block text-[10px] md:text-xs font-bold tracking-[0.4em] uppercase mb-4 text-secondary">Gastronomia</span>
+              <h1 className="font-serif text-4xl md:text-7xl mb-4">Sabores da Terra</h1>
+              <p className="font-light text-sm md:text-lg tracking-wide opacity-90 mb-8">Uma viagem culinária à beira-mar</p>
               
               <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
                   <button 
@@ -126,31 +126,31 @@ const Restaurant: React.FC = () => {
       </div>
 
       {/* Highlights Section */}
-      <div className="max-w-5xl mx-auto px-6 py-32">
-         <div className="text-center mb-24">
-            <h2 className="font-serif text-4xl text-primary mb-6">Menu de Degustação</h2>
-            <p className="text-gray-500 font-light max-w-2xl mx-auto leading-relaxed">
+      <div className="max-w-5xl mx-auto px-6 py-20 md:py-32">
+         <div className="text-center mb-16 md:mb-24">
+            <h2 className="font-serif text-3xl md:text-4xl text-primary mb-6">Menu de Degustação</h2>
+            <p className="text-gray-500 font-light max-w-2xl mx-auto leading-relaxed text-sm md:text-base">
               Ingredientes locais frescos, capturados diariamente no nosso mar e colhidos nas fazendas vizinhas, preparados com sofisticação internacional.
             </p>
             <div className="w-px h-16 bg-secondary mx-auto mt-10"></div>
          </div>
 
-         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
+         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-20">
             {/* Pratos Destaque */}
             <div>
-               <div className="flex items-center mb-10">
-                  <span className="text-secondary text-4xl mr-4 font-serif italic">01.</span>
-                  <h3 className="font-serif text-3xl text-primary">Favoritos do Chef</h3>
+               <div className="flex items-center mb-8 md:mb-10">
+                  <span className="text-secondary text-3xl md:text-4xl mr-4 font-serif italic">01.</span>
+                  <h3 className="font-serif text-2xl md:text-3xl text-primary">Favoritos do Chef</h3>
                </div>
                
-               <div className="space-y-10">
+               <div className="space-y-8 md:space-y-10">
                   {MENU_ITEMS.mains.slice(0, 3).map((item, idx) => (
                       <div className="group cursor-pointer" key={idx}>
                          <div className="flex justify-between items-baseline mb-2">
-                            <h4 className="font-serif text-xl text-gray-800 group-hover:text-secondary transition-colors">{item.name}</h4>
+                            <h4 className="font-serif text-lg md:text-xl text-gray-800 group-hover:text-secondary transition-colors">{item.name}</h4>
                             <span className="font-sans text-sm font-bold text-primary">{item.price}</span>
                          </div>
-                         <p className="text-gray-400 font-light text-sm italic">{item.desc}</p>
+                         <p className="text-gray-400 font-light text-xs md:text-sm italic">{item.desc}</p>
                       </div>
                   ))}
                </div>
@@ -158,19 +158,19 @@ const Restaurant: React.FC = () => {
 
             {/* Bebidas Destaque */}
             <div>
-               <div className="flex items-center mb-10">
-                  <span className="text-secondary text-4xl mr-4 font-serif italic">02.</span>
-                  <h3 className="font-serif text-3xl text-primary">Bar & Cocktails</h3>
+               <div className="flex items-center mb-8 md:mb-10">
+                  <span className="text-secondary text-3xl md:text-4xl mr-4 font-serif italic">02.</span>
+                  <h3 className="font-serif text-2xl md:text-3xl text-primary">Bar & Cocktails</h3>
                </div>
                
-               <div className="space-y-10">
+               <div className="space-y-8 md:space-y-10">
                   {MENU_ITEMS.drinks.map((item, idx) => (
                       <div className="group cursor-pointer" key={idx}>
                          <div className="flex justify-between items-baseline mb-2">
-                            <h4 className="font-serif text-xl text-gray-800 group-hover:text-secondary transition-colors">{item.name}</h4>
+                            <h4 className="font-serif text-lg md:text-xl text-gray-800 group-hover:text-secondary transition-colors">{item.name}</h4>
                             <span className="font-sans text-sm font-bold text-primary">{item.price}</span>
                          </div>
-                         <p className="text-gray-400 font-light text-sm italic">{item.desc}</p>
+                         <p className="text-gray-400 font-light text-xs md:text-sm italic">{item.desc}</p>
                       </div>
                   ))}
                </div>

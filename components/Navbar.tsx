@@ -5,7 +5,6 @@ import { Menu, X, Globe, User, Shield, LogIn, LogOut, Calendar } from 'lucide-re
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { ADMIN_EMAILS } from '../constants';
-import { getStorageUrl } from '../supabase';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -73,18 +72,9 @@ const Navbar: React.FC = () => {
           
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center z-50">
-            <Link to="/" className="group flex items-center" onClick={() => setIsOpen(false)}>
-              <img 
-                src={getStorageUrl('site/logo.png')} 
-                alt="Casa da Praia Logo"
-                className="h-10 w-10 md:h-14 md:w-14 mr-2 md:mr-3 object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-105"
-                onError={(e) => {
-                  // Fallback se a imagem não existir ainda
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-              <span className={`font-serif text-lg md:text-3xl font-bold tracking-[0.15em] transition-colors duration-300 text-white flex flex-col md:block leading-tight`}>
-                <span>CASA<span className="text-secondary font-light mx-1">DA</span>PRAIA</span>
+            <Link to="/" className="group" onClick={() => setIsOpen(false)}>
+              <span className={`font-serif text-2xl md:text-3xl font-bold tracking-[0.15em] transition-colors duration-300 text-white`}>
+                CASA<span className="text-secondary font-light mx-1">DA</span>PRAIA
               </span>
             </Link>
           </div>

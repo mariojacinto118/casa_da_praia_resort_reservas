@@ -55,7 +55,7 @@ export const INITIAL_ROOMS: Room[] = [
     available: true,
     quantity: 7,
   },
- {
+  {
     id: 'chalet',
     name: 'Chalé com Piscina',
     price: 195000,
