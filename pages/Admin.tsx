@@ -6,12 +6,16 @@ import { Mail, Calendar, Bed, LogIn, MessageSquare, Send, User, Check, X, FileTe
 import { Link, useSearchParams } from 'react-router-dom';
 import { ChatMessage, Booking } from '../types';
 import { supabase } from '../supabase';
-import { ADMIN_EMAILS } from '../constants';
+import { ADMIN_EMAILS, SUPER_ADMIN_EMAILS } from '../constants';
 
 const Admin: React.FC = () => {
   const { bookings, rooms, updateRoom, contactMessages, fetchMessages, sendChatMessage, updateBookingStatus, addBooking, tableReservations, fetchTableReservations, updateTableReservationStatus, refreshBookings } = useData();
   const { user } = useAuth();
   
+  // Verificação de Admin e Super Admin
+  const isAdmin = user && user.email && ADMIN_EMAILS.includes(user.email);
+  const isSuperAdmin = user && user.email && SUPER_ADMIN_EMAILS.includes(user.email);
+
   // Tabs & Navigation com Persistência na URL
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTabParam = searchParams.get('tab') as 'bookings' | 'calendar' | 'rooms' | 'messages' | 'livechat' | 'restaurant' | null;
@@ -20,6 +24,7 @@ const Admin: React.FC = () => {
   const setActiveTab = (tab: string) => {
       setSearchParams({ tab });
   };
+  
   
   // Filtros Avançados
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -269,7 +274,6 @@ const Admin: React.FC = () => {
   }, [bookings, statusFilter, searchTerm, dateStart, dateEnd]);
 
   // Verificação de Admin
-  const isAdmin = user && user.email && ADMIN_EMAILS.includes(user.email);
   if (!isAdmin) {
     return (
         <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-4">
@@ -327,7 +331,8 @@ const Admin: React.FC = () => {
                  {[
                     { id: 'bookings', label: 'Gestão de Reservas', icon: Calendar },
                     { id: 'calendar', label: 'Mapa de Ocupação', icon: Bed },
-                    { id: 'rooms', label: 'Config. Quartos', icon: FileText },
+                    // Mostra aba de quartos apenas para Super Admin
+                    ...(isSuperAdmin ? [{ id: 'rooms', label: 'Config. Quartos', icon: FileText }] : []),
                     { id: 'restaurant', label: 'Restaurante', icon: Utensils },
                     { id: 'messages', label: 'Mensagens', icon: Mail },
                     { id: 'livechat', label: 'Chat Ao Vivo', icon: MessageSquare },
@@ -673,6 +678,7 @@ const Admin: React.FC = () => {
 
         {/* --- ROOMS TAB --- */}
         {activeTab === 'rooms' && (
+          isSuperAdmin ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
             {rooms.map(room => (
               <div key={room.id} className="bg-white p-5 rounded-lg shadow-sm border border-stone-100 hover:shadow-md transition-shadow">
@@ -722,6 +728,12 @@ const Admin: React.FC = () => {
               </div>
             ))}
           </div>
+          ) : (
+            <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-stone-100">
+                <div className="text-red-500 mb-4 font-bold text-xl">Acesso Negado</div>
+                <p className="text-stone-500">Você não tem permissão para editar configurações de quartos.</p>
+            </div>
+          )
         )}
 
         {/* --- MESSAGES TAB --- */}
