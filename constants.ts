@@ -95,7 +95,7 @@ export const INITIAL_ROOMS: Room[] = [
     description: 'A experiência suprema da Casa da Praia. Todo o luxo e espaço que você pode imaginar.',
     capacity: 8,
     features: ['Jango Exclusivo', 'Área VIP', 'Serviço de Mordomo', 'Acesso Direto à Praia'],
-    image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/duplex-premium-com-jango.jpg",
+    image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/deluxe-premiu.jpg",
     available: true,
     quantity: 4,
   },
