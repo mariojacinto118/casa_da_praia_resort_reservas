@@ -62,7 +62,7 @@ export const INITIAL_ROOMS: Room[] = [
     description: 'Privacidade total com sua própria piscina particular. Ideal para momentos românticos.',
     capacity: 4,
     features: ['Piscina Privada', 'Área Externa', 'Cozinha Compacta', 'Rede de Descanso'],
-    image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/Quartos/Chaleprivativa.jpg",
+    image: "https://bkyfosvqceaivtoinemw.supabase.co/storage/v1/object/public/resort_assets/suites/Chaleprivativa.jpg",
     available: true,
     quantity: 5,
   },
