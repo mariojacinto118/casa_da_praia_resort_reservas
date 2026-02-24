@@ -49,7 +49,6 @@ const SmartImage: React.FC<SmartImageProps> = ({
       className={className}
       onError={handleError}
       referrerPolicy="no-referrer"
-      crossOrigin="anonymous"
       {...props}
     />
   );
