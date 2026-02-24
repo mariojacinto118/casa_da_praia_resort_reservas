@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Room, Activity, Booking, ContactMessage, ChatMessage, TableReservation } from './types';
+import { Room, Activity, Booking, ContactMessage, ChatMessage, TableReservation } from '../types';
 import { INITIAL_ROOMS, INITIAL_ACTIVITIES } from '../constants';
 import { supabase } from '../supabase';
 
@@ -101,25 +101,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Carregar dados locais (Preço, Descrição) mas respeitar a quantidade do DB
     useEffect(() => {
-        const savedRooms = localStorage.getItem('rooms');
-        const savedActivities = localStorage.getItem('activities');
+        // CORREÇÃO AUTOMÁTICA: Forçar a limpeza do cache antigo do navegador
+        // Isso garante que todos os usuários (novos e recorrentes) recebam as novas imagens do Unsplash
+        // e não carreguem os links quebrados antigos salvos no localStorage.
+        localStorage.removeItem('rooms');
+        localStorage.removeItem('activities');
         
-        if (savedRooms) {
-            const parsedRooms = JSON.parse(savedRooms);
-            setRooms(prevRooms => {
-                // Mesclar o que veio do localStorage com o estado atual (que pode ter dados do Supabase)
-                return parsedRooms.map((localRoom: Room) => {
-                    const currentRoom = prevRooms.find(r => r.id === localRoom.id);
-                    return {
-                        ...localRoom,
-                        // Se já temos dados do Supabase (currentRoom), usamos a quantidade dele.
-                        // Caso contrário, usamos do localStorage como fallback.
-                        quantity: currentRoom ? currentRoom.quantity : localRoom.quantity
-                    };
-                });
-            });
-        }
-        if (savedActivities) setActivities(JSON.parse(savedActivities));
+        // Código antigo de carregamento removido para evitar conflitos
     }, []);
 
     useEffect(() => {
