@@ -81,10 +81,12 @@ const Login: React.FC = () => {
             Email
           </button>
           <button
-            onClick={() => { setAuthMethod('phone'); setError(null); }}
-            className={`flex-1 py-4 text-sm font-bold uppercase tracking-wider transition-colors ${authMethod === 'phone' ? 'text-primary border-b-2 border-primary bg-stone-50' : 'text-gray-400 hover:text-gray-600'}`}
+            disabled
+            className="flex-1 py-4 text-sm font-bold uppercase tracking-wider text-gray-300 cursor-not-allowed flex flex-col items-center justify-center relative"
+            title="Indisponível no momento"
           >
             Telefone
+            <span className="text-[9px] normal-case font-normal text-red-400 absolute bottom-1">(Em breve)</span>
           </button>
         </div>
 
